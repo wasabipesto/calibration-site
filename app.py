@@ -8,7 +8,7 @@ import uuid
 app = Flask(__name__)
 
 @app.route('/')
-def get_uuid():
+def index_page():
     return render_template('index.html')
 
 @app.route('/get_data', methods=['POST'])
