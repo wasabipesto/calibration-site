@@ -3,6 +3,8 @@ docker stop manifold-calibration
 docker rm manifold-calibration
 docker run -d \
     -p 9632:80 \
-    --restart=unless-stopped \
+    -v /opt/manifold-calibration/data:/usr/src/manifold/data \
+    -u 1001 \
+    --restart unless-stopped \
     --name manifold-calibration \
     wasabipesto/manifold-calibration

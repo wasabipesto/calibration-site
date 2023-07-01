@@ -1,11 +1,89 @@
 from flask import Flask, render_template, request, jsonify 
 from waitress import serve
-#import requests
-#import sqlite3
-
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime, timedelta
+import requests
+import sqlite3
 import uuid
+import peewee as pw
+import numpy as np
+import os
+
+db_path = 'data/database.db'
+db = pw.SqliteDatabase(db_path)
+
+class BaseModel(pw.Model):
+    class Meta:
+        database = db
+
+class Market(BaseModel):
+    manifold_id      = pw.CharField(unique=True)
+    last_updated     = pw.DateTimeField(default=datetime.now)
+    creator_username = pw.CharField()
+    created_date     = pw.DateTimeField()
+    closed_date      = pw.DateTimeField()
+    resolved_date    = pw.DateTimeField()
 
 app = Flask(__name__)
+scheduler = BackgroundScheduler()
+if not os.path.exists(db_path):
+    print('Creating database file...')
+    open(db_path, 'w').close()
+db.connect()
+if not Market.table_exists():
+    db.create_tables([Market])
+
+def get_all_markets():
+    collection='markets'
+    print('Getting all '+collection+'...')
+    limit = 1000
+    last = None
+    data = []
+    while True:
+        if last:
+            response = requests.get(
+                'https://manifold.markets/api/v0/'+collection+'?limit='+str(limit)
+                +'&before='+str(last)
+                ).json()
+        else:
+            response = requests.get(
+                'https://manifold.markets/api/v0/'+collection+'?limit='+str(limit)
+                ).json()
+        if len(response):   
+            data += response
+            last = response[len(response)-1]['id']
+        if len(response) < limit:
+            break
+    return data
+
+def clean_timestamp(ts):
+    if ts:
+        return datetime.utcfromtimestamp(min(int(ts)/1000,253401772800))
+    else:
+        return None
+
+def refresh_data():
+    print('Starting data refresh...')
+    markets_raw = get_all_markets()
+
+
+    newly_resolved_markets = []
+    for market in markets_raw:
+        newly_resolved_markets.append({
+            'manifold_id': market['id'],
+            'creator_username': market['creatorUsername'],
+            'created_date': clean_timestamp(market.get('createdTime')),
+            'closed_date': clean_timestamp(market.get('closeTime')),
+            'resolved_date': clean_timestamp(market.get('resolutionTime')),
+        })
+
+    insert_batch_size = 100
+    with db.atomic():
+        for idx in range(0, len(newly_resolved_markets), insert_batch_size):
+            Market.insert_many(
+                newly_resolved_markets[idx:idx+insert_batch_size]
+                ).on_conflict_ignore().execute()
+
 
 @app.route('/')
 def index_page():
@@ -13,6 +91,8 @@ def index_page():
 
 @app.route('/get_data', methods=['POST'])
 def get_data():
+    print('Fulfilling request for data...')
+
     # Get filter parameters from the request
     filters = request.form.getlist('filter')
 
@@ -27,4 +107,11 @@ def get_data():
     return jsonify(data)
 
 if __name__ == "__main__":
+    scheduler.add_job(
+        refresh_data, 
+        'interval', 
+        minutes=5, 
+        start_date=(datetime.now()+timedelta(seconds=5))
+        )
+    scheduler.start()
     serve(app, listen='*:80')

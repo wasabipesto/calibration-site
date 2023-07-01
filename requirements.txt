@@ -1,3 +1,6 @@
 Flask
 waitress
 requests
+apscheduler
+peewee
+numpy
