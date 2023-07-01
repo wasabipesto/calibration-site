@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bootsrap!</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container">
+        <h1>Bootsrap!</h1>
+        <form id="filter-form">
+            <div class="form-group">
+                <label for="filter">Filter:</label>
+                <input type="text" class="form-control" id="filter" name="filter">
+            </div>
+            <button type="submit" class="btn btn-primary">Apply Filter</button>
+        </form>
+        <div id="graph"></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script>
+        document.getElementById('filter-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var filterValue = document.getElementById('filter').value;
+            // Send AJAX request to the backend
+            fetch('/get_data', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    'filter': filterValue
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Use Plotly to create and update the graph
+                var trace = {
+                    x: data.x,
+                    y: data.y,
+                    type: 'scatter'
+                };
+                var layout = {
+                    title: 'My Graph'
+                };
+                Plotly.newPlot('graph', [trace], layout);
+            });
+        });
+    </script>
+</body>
+</html>
