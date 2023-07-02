@@ -17,10 +17,11 @@ class BaseModel(pw.Model):
 
 class Market(BaseModel):
     manifold_id = pw.CharField(unique=True)
-    last_updated = pw.DateTimeField(default=datetime.now)
     creator_username = pw.CharField()
     created_date = pw.DateTimeField()
     closed_date = pw.DateTimeField()
+    open_days = pw.IntegerField()
+    market_volume = pw.IntegerField()
     resolved_date = pw.DateTimeField()
     resolved_prob = pw.DecimalField()
     prob_at_resolution = pw.DecimalField()
@@ -109,6 +110,8 @@ def refresh_data():
                 'creator_username': market['creatorUsername'],
                 'created_date': get_timestamp(market, 'createdTime'),
                 'closed_date': get_timestamp(market, 'closeTime'),
+                'open_days': (get_timestamp(market, 'closeTime') - get_timestamp(market, 'createdTime')).days,
+                'market_volume': market['volume'],
                 'resolved_date': get_timestamp(market, 'resolutionTime'),
                 'resolved_prob': get_resolved_prob(market),
                 'prob_at_resolution': get_prob_at_resolution(market),
@@ -129,10 +132,14 @@ def refresh_data():
 
 
 @app.route('/')
-def index_page():
+def index_base():
     return render_template('index.html')
 
-@app.route('/get_data', methods=['POST'])
+@app.route('/manifold')
+def index_manifold():
+    return render_template('manifold.html')
+
+@app.route('/manifold/get_data', methods=['POST'])
 def get_data():
     print('Fulfilling request for data...')
 

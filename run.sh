@@ -1,13 +1,13 @@
-docker build -t wasabipesto/manifold-calibration .
-docker stop manifold-calibration
-docker rm manifold-calibration
+docker build -t calibration-site .
+docker stop calibration-site
+docker rm calibration-site
 docker run -d \
     -p 9632:80 \
-    -v /opt/manifold-calibration/data:/usr/src/manifold/data \
+    -v /opt/calibration-site/data:/usr/src/manifold/data \
     -u 1001 \
     --restart unless-stopped \
-    --name manifold-calibration \
-    wasabipesto/manifold-calibration
+    --name calibration-site \
+    calibration-site
 if [ "$1" = "-l" ]; then
-    docker logs manifold-calibration -f
+    docker logs calibration-site -f
 fi

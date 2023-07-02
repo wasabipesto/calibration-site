@@ -1,4 +1,6 @@
-# untitled manifold calibration project
+# Calibration Stats
+
+A site to collect and display calibration stats for prediction markets.
 
 TODO:
 

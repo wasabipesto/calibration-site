@@ -1,99 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Manifold Calibration</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <title>Calibration City</title>
 </head>
 <body>
-    <div class="container">
-        <div id="graph"></div>
-        <br />
-        <form id="filter-form">
-            <div class="form-group">
-                <label for="filter">Filter:</label>
-                <input type="text" class="form-control" id="filter" name="filter">
-            </div>
-            <button type="submit" class="btn btn-primary">Apply Filter</button>
-        </form>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <script>
-        document.getElementById('filter-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            var filterValue = document.getElementById('filter').value;
-            // Send AJAX request to the backend
-            fetch('/get_data', {
-                method: 'POST',
-                body: new URLSearchParams({
-                    'filter': filterValue
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                updateGraph(data)
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            fetch('/get_data', {
-                method: 'POST',
-                body: new URLSearchParams({
-                    'filter': 'default'
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                updateGraph(data)
-            });
-        });
-
-        function updateGraph(data) {
-            // Use Plotly to create and update the graph
-            var traces = [
-                {
-                    x: data.x,
-                    y: data.y,
-                    name: 'Actual Calibration',
-                    type: 'scatter',
-                    mode: 'markers',
-                    marker: {
-                        color: 'rgb(227, 119, 194)',
-                        size: 10,
-                    },
-                },{
-                    x: [0, 1],
-                    y: [0, 1],
-                    name: 'Perfect Calibration',
-                    type: 'lines',
-                    mode: 'line',
-                    line: {
-                    color: 'rgb(127, 127, 127)',
-                    width: 1,
-                    },
-                }
-            ];
-            var layout = {
-                title: 'Calibration Plot',
-                xaxis: {
-                    title: 'Probability at Close',
-                    range: [0, 1],
-                    tickformat: ',.0%',
-                },
-                yaxis: {
-                    title: 'Average Resolution',
-                    range: [0, 1],
-                    tickformat: ',.0%',
-                },
-                height: 500,
-                margin: { l: 60, r: 40, t: 60, b: 40 },
-                showlegend: false,
-            };
-            const config = { responsive: true }
-            Plotly.newPlot('graph', traces, layout, config);
-        }
-    </script>
+    <h1>Prediction Markets & Calibration</h1>
+    <p><a href="manifold">Manifold Markets</a></p>
 </body>
 </html>
