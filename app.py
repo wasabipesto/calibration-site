@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify 
+from flask import Flask, render_template, request, jsonify, send_file
 from waitress import serve
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
@@ -147,6 +147,10 @@ def refresh_data():
 @app.route('/')
 def index_base():
     return render_template('index.html')
+
+@app.route('/db')
+def download_db():
+    return send_file('/usr/src/data/database.db')
 
 @app.route('/manifold')
 def index_manifold():

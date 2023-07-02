@@ -3,7 +3,7 @@ docker stop calibration-site
 docker rm calibration-site
 docker run -d \
     -p 9632:80 \
-    -v /opt/calibration-site/data:/usr/src/manifold/data \
+    -v /opt/calibration-site/data:/usr/src/data \
     -u 1001 \
     --restart unless-stopped \
     --name calibration-site \

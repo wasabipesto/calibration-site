@@ -41,5 +41,5 @@
 | Create multiple plots | ⛔ Not Planned |
 | Show table of markets | ⛔ Not Planned |
 | Description/help text | ⏳ Not Implemented |
-| Link to download db | ⏳ Not Implemented |
-| Size datapoints by market count/volume | ⏳ Not Implemented |
+| Link to download db | ✅ Implemented |
+| Size datapoints by market count/volume | ✅ Implemented |
