@@ -158,22 +158,38 @@ def get_data():
         )
 
     # set x-axis method
-    if request.form.get('xbin_modifier') in [
-        'prob_at_close',
-        #'prob_at_midpoint',
-        #'prob_time_weighted',
-    ]:
+    xbin_data = {
+        'prob_at_close': {
+            'xlabel': 'Probability at Close',
+        },
+        #'prob_at_midpoint': {
+        #    'xlabel': 'Probability at Midpoint',
+        #},
+        #'prob_time_weighted': {
+        #    'xlabel': 'Time-Weighted Probability',
+        #},
+    }
+    if request.form.get('xbin_modifier') in xbin_data.keys():
         xaxis_attr = request.form.get('xbin_modifier')
     else:
         xaxis_attr = 'prob_at_close'
 
     # set y-axis weight
-    if request.form.get('ybin_modifier') in [
-        'none',
-        'volume',
-        #'value',
-        #'traders',
-    ]:
+    ybin_data = {
+        'none': {
+            'ylabel': 'Average Resolution Value',
+        },
+        'volume': {
+            'ylabel': 'Resolution Value, Weighted by Volume',
+        },
+        #'payout': {
+        #    'ylabel': 'Resolution Value, Weighted by Payout',
+        #},
+        #'traders': {
+        #    'ylabel': 'Resolution Value, Weighted by Traders',
+        #},
+    }
+    if request.form.get('ybin_modifier') in ybin_data.keys():
         yaxis_attr = request.form.get('ybin_modifier')
     else:
         yaxis_attr = 'none'
@@ -204,15 +220,24 @@ def get_data():
         xbins[xb]['v'].append(market['resolved_prob'])
         xbins[xb]['w'].append(yaxis_weight)
 
-    # average everything out
+    # assemble data to return
     data = {
         'x': list(xbins.keys()),
         'y': [],
+        'title': 'Calibration Plot',
+        'xlabel': xbin_data[xaxis_attr]['xlabel'],
+        'ylabel': ybin_data[yaxis_attr]['ylabel'],
+        'num_markets': [],
+        'num_markets_total': 0,
+        #'brier_score': 0 # TODO
     }
+    # average everything out
     for xb in xbins.values():
         value_sumproduct = sum([xb['v'][i]*xb['w'][i] for i in range(len(xb['v']))])
         weight_sum = sum(xb['w'])
         data['y'].append(value_sumproduct / weight_sum)
+        data['num_markets'].append(len(xb['v']))
+        data['num_markets_total'] += len(xb['v'])
     return jsonify(data)
 
 if __name__ == "__main__":

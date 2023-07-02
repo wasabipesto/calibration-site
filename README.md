@@ -1,43 +1,45 @@
 # Calibration Stats
 
-A site to collect and display calibration stats for prediction markets.
+> A site to collect and display calibration stats for prediction markets.
 
-Option & modifier support:
+## Manifold
 
-- Filters:
-    - [ ] Creator username (text input)
-    - [ ] Created date/closed date/resolved date
-    - [ ] Open length (days)
-    - [ ] Liquidity pool
-    - [x] Market volume
-    - [ ] Total payout amount (value)
-    - [ ] Question length
-    - [ ] Description length
-    - [ ] Number of trades
-    - [ ] Number of unique traders
-    - [ ] Number of unique holders (had open position at close)
-    - [ ] Number of comments
-    - [ ] Number of unique commenters
-    - [ ] Is predictive/serious
-    - [ ] Was re-resolved or resolved by admins
-    - [ ] List of tags/groups
-    - [ ] Resolved YES
-    - [ ] Resolved NO
-- Methods (x-axis):
-    - [x] Resolved probability (N/Y -> 0/100%)
-    - [ ] Probability at {1,100}% through
-    - [ ] Time-weighted average probability
-- Weights (y-axis):
-    - [x] No weighting
-    - [x] Weight markets by volume
-    - [ ] Weight markets by payout (value)
-    - [ ] Weight markets by number of traders
-    - [ ] Weight markets by number of comments
-- Other:
-    - [ ] Adjustable x-bin size
-    - [ ] Show number of markets in each bin
-    - [ ] Show Brier score
-    - [ ] Create multiple plots
-    - [ ] Show table of markets 
-    - [ ] Description/help text
-    - [ ] Link to download db
+| Feature Implementation Table | |
+| --- | --- |
+| **Filters** |
+| Is predictive/serious | ✅ Implemented |
+| Resolved YES/NO/MKT | ✅ Implemented |
+| Was re-resolved or resolved by admins | ⛔ Unavailable |
+| Creator username (text input) | ⏳ Not Implemented |
+| Group label (text input) | ⚠️ Requires FullMarket |
+| Market volume | ✅ Implemented |
+| Liquidity pool | ⏳ Not Implemented |
+| Total payout amount (value) | ⚠️ Requires FullMarket |
+| Number of trades | ⚠️ Requires FullMarket |
+| Number of unique traders | ⚠️ Requires FullMarket |
+| Number of unique holders | ⚠️ Requires FullMarket |
+| Number of comments | ⚠️ Requires FullMarket |
+| Number of unique commenters | ⚠️ Requires FullMarket |
+| Created date/closed date | ✅ Implemented |
+| Open length (days) | ✅ Implemented |
+| Question length | ⛔ Not Planned |
+| Description length | ⛔ Not Planned |
+| **Methods (x-axis)** |
+| Resolved probability (N/Y -> 0/100%) | ✅ Implemented |
+| Probability at 25/50/75% through | ⚠️ Requires FullMarket |
+| Time-weighted average probability | ⚠️ Requires FullMarket |
+| **Weights (y-axis)** |
+| No weighting | ✅ Implemented |
+| Weight markets by volume | ✅ Implemented |
+| Weight markets by payout (value) | ⚠️ Requires FullMarket |
+| Weight markets by number of traders | ⚠️ Requires FullMarket |
+| Weight markets by number of comments | ⚠️ Requires FullMarket |
+| **Other** |
+| Adjustable x-bin size | ✅ Implemented |
+| Show number of markets in each bin | ⏳ Not Implemented |
+| Show total number of markets in sample | ✅ Implemented |
+| Show Brier score | ⏳ Not Implemented |
+| Create multiple plots | ⛔ Not Planned |
+| Show table of markets | ⏳ Not Implemented |
+| Description/help text | ⏳ Not Implemented |
+| Link to download db | ⏳ Not Implemented |
