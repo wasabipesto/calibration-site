@@ -40,7 +40,9 @@ Option & modifier support:
     - [ ] Time-weighted average probability
 - Weights (y-axis):
     - [x] No weighting
-    - [ ] Weight markets by volume
+    - [x] Weight markets by volume
     - [ ] Weight markets by payout (value)
     - [ ] Weight markets by number of traders
     - [ ] Weight markets by number of comments
+- Other:
+    - [ ] Adjustable x-bin size

@@ -4,31 +4,78 @@
     <title>Manifold Calibration</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
 </head>
 <body>
     <div class="container">
         <div id="graph"></div>
         <br />
-        <form id="filter-form">
-            <div class="form-group">
-                <label for="filter">Filter:</label>
-                <input type="text" class="form-control" id="filter" name="filter">
+        <form id="options_form">
+            <h3>Calculation Types</h3>
+            <div class="field">
+                <label class="label" for="xbin_modifier">X-Axis Bin Method</label>
+                <div class="control">
+                    <select name="xbin_modifier" id="xbin_modifier">
+                        <option value="prob_at_close">Probability at Close</option>
+                        <option value="prob_at_midpoint">Probability at Midpoint</option>
+                        <option value="prob_time_weighted">Time-Weighted Probability</option>
+                    </select>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary">Apply Filters</button>
+            <div class="field">
+                <label class="label" for="ybin_modifier">Y-Axis Bin Weighting</label>
+                <div class="control">
+                    <select name="ybin_modifier" id="ybin_modifier">
+                        <option value="weight_none">No Weighting</option>
+                        <option value="weight_by_volume">Weight by Volume</option>
+                        <option value="weight_by_payout">Weight by Payout</option>
+                        <option value="weight_by_traders">Weight by Traders</option>
+                    </select>
+                </div>
+            </div>
+            <h3>Market Filters</h3>
+            <div class="field">
+                <label class="label" for="min_volume">Minimum Volume</label>
+                <div class="control">
+                    <input type="number" name="min_volume" id="min_volume"> M$
+                </div>
+            </div>
+            <div class="field">
+                <label class="label" for="min_open_days">Minimum Open Duration</label>
+                <div class="control">
+                    <input type="number" name="min_open_days" id="min_open_days"> days
+                </div>
+            </div>
+            <div class="field">
+                <label class="label" for="creator_username">Creator Username</label>
+                <div class="control">
+                    <input type="text" name="creator_username" id="creator_username">
+                </div>
+            </div>
+            <div class="field">
+                <label class="label" for="date_created">Date Created</label>
+                <div class="control">
+                    <input type="date" name="date_created" id="date_created">
+                </div>
+            </div>
+            <div class="control">
+                <button type="submit">Apply</button>
+            </div>
         </form>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script>
-        document.getElementById('filter-form').addEventListener('submit', function(event) {
+        document.getElementById('options_form').addEventListener('submit', function(event) {
             event.preventDefault();
-            var filterValue = document.getElementById('filter').value;
             // Send AJAX request to the backend
             fetch('/manifold/get_data', {
                 method: 'POST',
                 body: new URLSearchParams({
-                    'filter': filterValue
+                    'trigger': 'user_submit',
+                    'xbin_modifier': document.getElementById('xbin_modifier').value,
+                    'ybin_modifier': document.getElementById('ybin_modifier').value,
+                    'min_volume': document.getElementById('min_volume').value,
+                    'min_open_days': document.getElementById('min_open_days').value,
                 })
             })
             .then(response => response.json())
@@ -41,7 +88,7 @@
             fetch('/manifold/get_data', {
                 method: 'POST',
                 body: new URLSearchParams({
-                    'filter': 'default'
+                    'trigger': 'pageload',
                 })
             })
             .then(response => response.json())

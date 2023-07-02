@@ -20,11 +20,10 @@ class Market(BaseModel):
     creator_username = pw.CharField()
     created_date = pw.DateTimeField()
     closed_date = pw.DateTimeField()
-    open_days = pw.IntegerField()
-    market_volume = pw.IntegerField()
+    volume = pw.IntegerField()
     resolved_date = pw.DateTimeField()
     resolved_prob = pw.DecimalField()
-    prob_at_resolution = pw.DecimalField()
+    prob_at_close = pw.DecimalField()
 
 app = Flask(__name__)
 scheduler = BackgroundScheduler()
@@ -83,7 +82,7 @@ def get_resolved_prob(market):
     else:
         raise ValueError('Could not get resolved probability:', market)
 
-def get_prob_at_resolution(market):
+def prob_at_close(market):
     return market['probability']
 
 def refresh_data():
@@ -110,11 +109,10 @@ def refresh_data():
                 'creator_username': market['creatorUsername'],
                 'created_date': get_timestamp(market, 'createdTime'),
                 'closed_date': get_timestamp(market, 'closeTime'),
-                'open_days': (get_timestamp(market, 'closeTime') - get_timestamp(market, 'createdTime')).days,
-                'market_volume': market['volume'],
+                'volume': market['volume'],
                 'resolved_date': get_timestamp(market, 'resolutionTime'),
                 'resolved_prob': get_resolved_prob(market),
-                'prob_at_resolution': get_prob_at_resolution(market),
+                'prob_at_close': prob_at_close(market),
             })
 
     if len(newly_resolved_markets):
@@ -142,13 +140,39 @@ def index_manifold():
 @app.route('/manifold/get_data', methods=['POST'])
 def get_data():
     print('Fulfilling request for data...')
+    
+    # get all markets
+    markets_filtered = Market.select()
+    # filter by each criteria
+    if request.form.get('min_volume'):
+        markets_filtered = markets_filtered.where(
+            Market.volume >= request.form.get('min_volume')
+        )
+    if request.form.get('min_open_days'):
+        markets_filtered = markets_filtered.where(
+            (Market.created_date - Market.closed_date).days >= request.form.get('min_open_days')
+        )
 
-    # get filter parameters from the request
-    filters = request.form.getlist('filter')
-    print(filters)
+    # set x-axis method
+    if request.form.get('xbin_modifier') in [
+        'prob_at_close',
+        #'prob_at_midpoint',
+        #'prob_time_weighted',
+    ]:
+        xaxis_attr = request.form.get('xbin_modifier')
+    else:
+        xaxis_attr = 'prob_at_close'
 
-    xaxis_attr = 'prob_at_resolution' # TODO: vary by method
-    markets_filtered = Market.select() # TODO: add filters
+    # set y-axis weight
+    ybin_weight_attr_map = {
+        'weight_by_volume': 'volume',
+        #'weight_by_payout': 'value',
+        #'weight_by_traders': 'traders',
+    }
+    if request.form.get('ybin_modifier') in ybin_weight_attr_map.keys():
+        yaxis_attr = ybin_weight_attr_map[request.form.get('ybin_modifier')]
+    else:
+        yaxis_attr = 'weight_none'
 
     # collect data in x-axis buckets
     buckets = {}
@@ -157,10 +181,12 @@ def get_data():
         b = round(float(market[xaxis_attr]),bucket_size) + 1/10**bucket_size/2
         if not b in buckets.keys():
             buckets.update({b:[]})
-        buckets[b].append(market['resolved_prob'])
+        if yaxis_attr == 'none':
+            buckets[b].append(market['resolved_prob'])
+        else:
+            buckets[b].append(market['resolved_prob']*market[yaxis_attr])
 
     # average everything out
-    # TODO: add customizable weights
     data = {
         'x': list(buckets.keys()),
         'y': [np.average(i) for i in buckets.values()]
@@ -172,7 +198,8 @@ if __name__ == "__main__":
         refresh_data, 
         'interval', 
         minutes=5, 
-        start_date=(datetime.now()+timedelta(seconds=5))
+        start_date=(datetime.now()+timedelta(seconds=15))
         )
     scheduler.start()
     serve(app, listen='*:80')
+    print('App started.')
