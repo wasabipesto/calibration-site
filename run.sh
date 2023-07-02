@@ -8,3 +8,6 @@ docker run -d \
     --restart unless-stopped \
     --name manifold-calibration \
     wasabipesto/manifold-calibration
+if [ "$1" = "-l" ]; then
+    docker logs manifold-calibration -f
+fi

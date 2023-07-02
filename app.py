@@ -35,7 +35,6 @@ if not Market.table_exists():
 
 def get_all_markets():
     collection='markets'
-    print('Getting all '+collection+'...')
     limit = 1000
     last = None
     data = []
@@ -65,24 +64,35 @@ def clean_timestamp(ts):
 def refresh_data():
     print('Starting data refresh...')
     markets_raw = get_all_markets()
-
-
+    
+    print('Starting data download...')
     newly_resolved_markets = []
     for market in markets_raw:
-        newly_resolved_markets.append({
-            'manifold_id': market['id'],
-            'creator_username': market['creatorUsername'],
-            'created_date': clean_timestamp(market.get('createdTime')),
-            'closed_date': clean_timestamp(market.get('closeTime')),
-            'resolved_date': clean_timestamp(market.get('resolutionTime')),
-        })
+        if not markets_raw.index(market) % 1000:
+            print('Data download:', markets_raw.index(market), '/', len(markets_raw))
+        if market.get('isResolved') and market.get('outcomeType') == 'BINARY' and market.get('mechanism') == 'cpmm-1':
+            try:
+                market_from_db = Market.get(Market.manifold_id == market['id'])
+            except Market.DoesNotExist:
+                newly_resolved_markets.append({
+                    'manifold_id': market['id'],
+                    'creator_username': market['creatorUsername'],
+                    'created_date': clean_timestamp(market.get('createdTime')),
+                    'closed_date': clean_timestamp(market.get('closeTime')),
+                    'resolved_date': clean_timestamp(market.get('resolutionTime')),
+                })
 
-    insert_batch_size = 100
-    with db.atomic():
-        for idx in range(0, len(newly_resolved_markets), insert_batch_size):
-            Market.insert_many(
-                newly_resolved_markets[idx:idx+insert_batch_size]
-                ).on_conflict_ignore().execute()
+    if len(newly_resolved_markets):
+        print('Saving', len(newly_resolved_markets), 'newly resolved markets...')
+        insert_batch_size = 100
+        with db.atomic():
+            for idx in range(0, len(newly_resolved_markets), insert_batch_size):
+                Market.insert_many(
+                    newly_resolved_markets[idx:idx+insert_batch_size]
+                    ).execute()
+        print('Complete.')
+    else:
+        print('No changes to be made.')
 
 
 @app.route('/')
@@ -95,14 +105,23 @@ def get_data():
 
     # Get filter parameters from the request
     filters = request.form.getlist('filter')
+    print(filters)
 
     # TODO: Query the database and calculate plot
 
     # Placeholder data
-    data = {
+    data1 = {
         "x": [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1],
         "y": [0,0.09,0.18,0.31,0.42,0.5,0.59,0.69,0.78,0.85,0.92]
     }
+    data2 = {
+        "x": [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1],
+        "y": [0,0.04,0.09,0.15,0.21,0.27,0.46,0.71,0.83,0.84,0.85]
+    }
+    if filters == ['default']:
+        data = data1
+    else:
+        data = data2
 
     return jsonify(data)
 
