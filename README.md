@@ -2,17 +2,6 @@
 
 A site to collect and display calibration stats for prediction markets.
 
-TODO:
-
-- [ ] Backend: Accept filters from frontend
-- [ ] Frontend: Select filters
-- [ ] Frontend: Select method (x-axis)
-- [ ] Frontend: Select weight (y-axis)
-- [ ] Frontend: Create multiple plots
-- [ ] Frontend: Show table of markets 
-- [ ] Frontend: Description/help text
-- [ ] Frontend: Link to download sqlite file
-
 Option & modifier support:
 
 - Filters:
@@ -20,7 +9,7 @@ Option & modifier support:
     - [ ] Created date/closed date/resolved date
     - [ ] Open length (days)
     - [ ] Liquidity pool
-    - [ ] Market volume
+    - [x] Market volume
     - [ ] Total payout amount (value)
     - [ ] Question length
     - [ ] Description length
@@ -46,3 +35,9 @@ Option & modifier support:
     - [ ] Weight markets by number of comments
 - Other:
     - [ ] Adjustable x-bin size
+    - [ ] Show number of markets in each bin
+    - [ ] Show Brier score
+    - [ ] Create multiple plots
+    - [ ] Show table of markets 
+    - [ ] Description/help text
+    - [ ] Link to download db

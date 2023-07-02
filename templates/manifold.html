@@ -1,159 +1,179 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Manifold Calibration</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
-</head>
-<body>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" />
+  </head>
+  <body>
     <div class="container">
-        <div id="graph"></div>
-        <br />
-        <form id="options_form">
-            <h3>Calculation Types</h3>
+      <div id="graph"></div>
+      <br />
+      <form id="options_form">
+        <div class="columns">
+          <div class="column">
             <div class="field">
-                <label class="label" for="xbin_modifier">X-Axis Bin Method</label>
-                <div class="control">
-                    <select name="xbin_modifier" id="xbin_modifier">
-                        <option value="prob_at_close">Probability at Close</option>
-                        <option value="prob_at_midpoint">Probability at Midpoint</option>
-                        <option value="prob_time_weighted">Time-Weighted Probability</option>
-                    </select>
+              <label class="label" for="xbin_modifier">X-Axis Bin Method</label>
+              <div class="control">
+                <div class="select">
+                  <select name="xbin_modifier" id="xbin_modifier">
+                    <option value="prob_at_close" selected>Probability at Close</option>
+                    <option value="prob_at_midpoint" disabled>Probability at Midpoint</option>
+                    <option value="prob_time_weighted" disabled>Time-Weighted Probability</option>
+                  </select>
                 </div>
-            </div>
-            <div class="field">
-                <label class="label" for="xbin_size">X-Axis Bin Size</label>
-                <div class="control">
-                    <select name="xbin_size" id="xbin_size">
-                        <option value="0.005">0.5%</option>
-                        <option value="0.010">1.0%</option>
-                        <option value="0.025">2.5%</option>
-                        <option value="0.050">5.0%</option>
-                        <option value="0.075">7.5%</option>
-                        <option value="0.100">10%</option>
-                    </select>
-                </div>
+              </div>
             </div>
             <div class="field">
-                <label class="label" for="ybin_modifier">Y-Axis Bin Weighting</label>
-                <div class="control">
-                    <select name="ybin_modifier" id="ybin_modifier">
-                        <option value="weight_none">No Weighting</option>
-                        <option value="weight_by_volume">Weight by Volume</option>
-                        <option value="weight_by_payout">Weight by Payout</option>
-                        <option value="weight_by_traders">Weight by Traders</option>
-                    </select>
+              <label class="label" for="xbin_size">X-Axis Bin Size</label>
+              <div class="control">
+                <div class="select">
+                  <select name="xbin_size" id="xbin_size">
+                    <option value="0.005">0.5%</option>
+                    <option value="0.010" selected>1.0%</option>
+                    <option value="0.015">1.5%</option>
+                    <option value="0.020">2.0%</option>
+                    <option value="0.025">2.5%</option>
+                    <option value="0.030">3.0%</option>
+                    <option value="0.040">4.0%</option>
+                    <option value="0.050">5.0%</option>
+                    <option value="0.060">6.0%</option>
+                    <option value="0.070">7.0%</option>
+                    <option value="0.080">8.0%</option>
+                    <option value="0.090">9.0%</option>
+                    <option value="0.100">10%</option>
+                  </select>
                 </div>
-            </div>
-            <h3>Market Filters</h3>
-            <div class="field">
-                <label class="label" for="min_volume">Minimum Volume</label>
-                <div class="control">
-                    <input type="number" name="min_volume" id="min_volume"> M$
-                </div>
-            </div>
-            <div class="field">
-                <label class="label" for="min_open_days">Minimum Open Duration</label>
-                <div class="control">
-                    <input type="number" name="min_open_days" id="min_open_days"> days
-                </div>
+              </div>
             </div>
             <div class="field">
-                <label class="label" for="creator_username">Creator Username</label>
-                <div class="control">
-                    <input type="text" name="creator_username" id="creator_username">
+              <label class="label" for="ybin_modifier">Y-Axis Bin Weighting</label>
+              <div class="control">
+                <div class="select">
+                  <select name="ybin_modifier" id="ybin_modifier">
+                    <option value="none" selected>No Weighting</option>
+                    <option value="volume">Weight by Volume</option>
+                    <option value="payout" disabled>Weight by Payout</option>
+                    <option value="traders" disabled>Weight by Traders</option>
+                  </select>
                 </div>
+              </div>
+            </div>
+          </div>
+          <div class="column">
+            <div class="field">
+              <label class="label" for="min_volume">Minimum Volume</label>
+              <div class="control"><input class="input" type="number" name="min_volume" id="min_volume" /> M$</div>
             </div>
             <div class="field">
-                <label class="label" for="date_created">Date Created</label>
-                <div class="control">
-                    <input type="date" name="date_created" id="date_created">
-                </div>
+              <label class="label" for="min_open_days">Minimum Open Duration</label>
+              <div class="control">
+                <input class="input" type="number" name="min_open_days" id="min_open_days" /> days
+              </div>
             </div>
-            <div class="control">
-                <button type="submit">Apply</button>
+            <div class="field">
+              <label class="label" for="creator_username">Creator Username</label>
+              <div class="control">
+                <input class="input" type="text" name="creator_username" id="creator_username" disabled />
+              </div>
             </div>
-        </form>
+            <div class="field">
+              <label class="label" for="date_created">Date Created</label>
+              <div class="control">
+                <input class="input" type="date" name="date_created" id="date_created" disabled />
+              </div>
+            </div>
+            <div class="field is-grouped">
+              <div class="control">
+                <button class="button is-link" type="submit">Apply</button>
+                <button class="button is-light" type="reset">Reset</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
     </div>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script>
-        document.getElementById('options_form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            // Send AJAX request to the backend
-            fetch('/manifold/get_data', {
-                method: 'POST',
-                body: new URLSearchParams({
-                    'trigger': 'user_submit',
-                    'xbin_modifier': document.getElementById('xbin_modifier').value,
-                    'ybin_modifier': document.getElementById('ybin_modifier').value,
-                    'min_volume': document.getElementById('min_volume').value,
-                    'min_open_days': document.getElementById('min_open_days').value,
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                updateGraph(data)
-            });
-        });
+      document.getElementById('options_form').addEventListener('submit', function (event) {
+        event.preventDefault()
+        // Send AJAX request to the backend
+        fetch('/manifold/get_data', {
+          method: 'POST',
+          body: new URLSearchParams({
+            trigger: 'user_submit',
+            xbin_modifier: document.getElementById('xbin_modifier').value,
+            xbin_size: document.getElementById('xbin_size').value,
+            ybin_modifier: document.getElementById('ybin_modifier').value,
+            min_volume: document.getElementById('min_volume').value,
+            min_open_days: document.getElementById('min_open_days').value,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            updateGraph(data)
+          })
+      })
 
-        document.addEventListener('DOMContentLoaded', function() {
-            fetch('/manifold/get_data', {
-                method: 'POST',
-                body: new URLSearchParams({
-                    'trigger': 'pageload',
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                updateGraph(data)
-            });
-        });
+      document.addEventListener('DOMContentLoaded', function () {
+        fetch('/manifold/get_data', {
+          method: 'POST',
+          body: new URLSearchParams({
+            trigger: 'pageload',
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            updateGraph(data)
+          })
+      })
 
-        function updateGraph(data) {
-            // Use Plotly to create and update the graph
-            var traces = [
-                {
-                    x: data.x,
-                    y: data.y,
-                    name: 'Actual Calibration',
-                    type: 'scatter',
-                    mode: 'markers',
-                    marker: {
-                        color: 'rgb(227, 119, 194)',
-                        size: 10,
-                    },
-                },{
-                    x: [0, 1],
-                    y: [0, 1],
-                    name: 'Perfect Calibration',
-                    type: 'lines',
-                    mode: 'line',
-                    line: {
-                    color: 'rgb(127, 127, 127)',
-                    width: 1,
-                    },
-                }
-            ];
-            var layout = {
-                title: 'Calibration Plot',
-                xaxis: {
-                    title: 'Probability at Close',
-                    range: [0, 1],
-                    tickformat: ',.0%',
-                },
-                yaxis: {
-                    title: 'Average Resolution',
-                    range: [0, 1],
-                    tickformat: ',.0%',
-                },
-                height: 500,
-                margin: { l: 60, r: 40, t: 60, b: 40 },
-                showlegend: false,
-            };
-            const config = { responsive: true }
-            Plotly.newPlot('graph', traces, layout, config);
+      function updateGraph(data) {
+        // Use Plotly to create and update the graph
+        var traces = [
+          {
+            x: data.x,
+            y: data.y,
+            name: 'Actual Calibration',
+            type: 'scatter',
+            mode: 'markers',
+            marker: {
+              color: 'rgb(227, 119, 194)',
+              size: 10,
+            },
+          },
+          {
+            x: [0, 1],
+            y: [0, 1],
+            name: 'Perfect Calibration',
+            type: 'lines',
+            mode: 'line',
+            line: {
+              color: 'rgb(127, 127, 127)',
+              width: 1,
+            },
+          },
+        ]
+        var layout = {
+          title: 'Calibration Plot',
+          xaxis: {
+            title: 'Probability at Close',
+            range: [0, 1],
+            tickformat: ',.0%',
+          },
+          yaxis: {
+            title: 'Average Resolution',
+            range: [0, 1],
+            tickformat: ',.0%',
+          },
+          height: 500,
+          margin: { l: 60, r: 40, t: 60, b: 40 },
+          showlegend: false,
         }
+        const config = { responsive: true }
+        Plotly.newPlot('graph', traces, layout, config)
+      }
     </script>
-</body>
+  </body>
 </html>

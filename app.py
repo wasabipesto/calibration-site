@@ -168,45 +168,55 @@ def get_data():
         xaxis_attr = 'prob_at_close'
 
     # set y-axis weight
-    ybin_weight_attr_map = {
-        'weight_by_volume': 'volume',
-        #'weight_by_payout': 'value',
-        #'weight_by_traders': 'traders',
-    }
-    if request.form.get('ybin_modifier') in ybin_weight_attr_map.keys():
-        yaxis_attr = ybin_weight_attr_map[request.form.get('ybin_modifier')]
+    if request.form.get('ybin_modifier') in [
+        'none',
+        'volume',
+        #'value',
+        #'traders',
+    ]:
+        yaxis_attr = request.form.get('ybin_modifier')
     else:
         yaxis_attr = 'none'
 
-    # collect data in x-axis buckets
-    buckets = {}
-    bucket_size = 2 # 1: tenths, 2: hundredths
+    # generate x-axis bins
+    xbins = {}
+    if request.form.get('xbin_size') and \
+        float(request.form.get('xbin_size')) in [
+            0.005, 0.01, 0.015, 0.02, 0.025, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1
+        ]:
+        xbin_size = float(request.form.get('xbin_size'))
+    else:
+        xbin_size = 0.01
+    xb = xbin_size/2
+    while xb < 1:
+        xbins.update({round(xb,4):{'v':[],'w':[]}})
+        xb+=xbin_size
+    
     for market in markets_filtered.dicts().iterator():
-        # calculate appropriate xaxis bucket
-        b = round(float(market[xaxis_attr]),bucket_size) + 1/10**bucket_size/2
-        if not b in buckets.keys():
-            buckets.update({b:{'v':[],'w':[]}})
+        # calculate appropriate xaxis bins
+        xb = round(int((float(market[xaxis_attr]) - xbin_size/2) / xbin_size) * xbin_size + xbin_size/2, 4)
         # calculate appropriate yaxis weight
         if yaxis_attr == 'none':
             yaxis_weight = 1
         else:
             yaxis_weight = market[yaxis_attr]
         # save data
-        buckets[b]['v'].append(market['resolved_prob'])
-        buckets[b]['w'].append(yaxis_weight)
+        xbins[xb]['v'].append(market['resolved_prob'])
+        xbins[xb]['w'].append(yaxis_weight)
 
     # average everything out
     data = {
-        'x': list(buckets.keys()),
+        'x': list(xbins.keys()),
         'y': [],
     }
-    for b in buckets.values():
-        value_sumproduct = sum([b['v'][i]*b['w'][i] for i in range(len(b['v']))])
-        weight_sum = sum(b['w'])
+    for xb in xbins.values():
+        value_sumproduct = sum([xb['v'][i]*xb['w'][i] for i in range(len(xb['v']))])
+        weight_sum = sum(xb['w'])
         data['y'].append(value_sumproduct / weight_sum)
     return jsonify(data)
 
 if __name__ == "__main__":
+    print('App started.')
     scheduler.add_job(
         refresh_data, 
         'interval', 
@@ -215,4 +225,3 @@ if __name__ == "__main__":
         )
     scheduler.start()
     serve(app, listen='*:80')
-    print('App started.')
