@@ -20,13 +20,13 @@ class Market(BaseModel):
     manifold_url = pw.CharField()
     question_text = pw.CharField()
     creator_username = pw.CharField()
-    created_date = pw.DateTimeField()
-    closed_date = pw.DateTimeField()
+    date_created = pw.DateTimeField()
+    date_closed = pw.DateTimeField()
     open_days = pw.IntegerField()
     volume = pw.IntegerField()
     liquidity = pw.IntegerField()
-    resolved_date = pw.DateTimeField()
-    resolved_prob = pw.DecimalField()
+    date_resolved = pw.DateTimeField()
+    prob_resolved = pw.DecimalField()
     prob_at_close = pw.DecimalField()
 
 app = Flask(__name__)
@@ -72,7 +72,7 @@ def get_timestamp(market, attr):
         )/1000,253401772800)
     )
 
-def get_resolved_prob(market):
+def get_prob_resolved(market):
     if market.get('resolution') == 'NO':
         return 0
     elif market.get('resolution') == 'YES':
@@ -119,13 +119,13 @@ def refresh_data():
                 'manifold_url': market['url'],
                 'question_text': market['question'],
                 'creator_username': market['creatorUsername'],
-                'created_date': get_timestamp(market, 'createdTime'),
-                'closed_date': get_timestamp(market, 'closeTime'),
+                'date_created': get_timestamp(market, 'createdTime'),
+                'date_closed': get_timestamp(market, 'closeTime'),
                 'open_days': get_open_days(market),
                 'volume': market['volume'],
                 'liquidity': market['totalLiquidity'],
-                'resolved_date': get_timestamp(market, 'resolutionTime'),
-                'resolved_prob': get_resolved_prob(market),
+                'date_resolved': get_timestamp(market, 'resolutionTime'),
+                'prob_resolved': get_prob_resolved(market),
                 'prob_at_close': get_prob_at_close(market),
             })
     print('Downloaded all data in', (datetime.now()-ts0).seconds, 'seconds.')
@@ -197,7 +197,7 @@ def get_data():
     if len(markets) == 0:
         return jsonify({
             'status': 'error',
-            'description': 'No markets in sample!',
+            'error_description': 'No markets in sample!',
         })
 
     # set x-axis method
@@ -246,7 +246,7 @@ def get_data():
         xbin_size = 0.01
     xb = xbin_size/2
     while xb < 1:
-        xbins.update({round(xb,4):{'v':[],'w':[]}})
+        xbins.update({round(xb,4):{'forecast':[],'resolved':[],'weight':[]}})
         xb+=xbin_size
     
     for market in markets.dicts().iterator():
@@ -258,8 +258,9 @@ def get_data():
         else:
             yaxis_weight = market[yaxis_attr]
         # save data
-        xbins[xb]['v'].append(market['resolved_prob'])
-        xbins[xb]['w'].append(yaxis_weight)
+        xbins[xb]['forecast'].append(market[xaxis_attr])
+        xbins[xb]['resolved'].append(market['prob_resolved'])
+        xbins[xb]['weight'].append(yaxis_weight)
 
     # assemble data to return
     data = {
@@ -271,27 +272,30 @@ def get_data():
         'ylabel': ybin_data[yaxis_attr]['ylabel'],
         'num_markets': [],
         'num_markets_total': 0,
-        #'brier_score': 0 # TODO
+        'brier_score': 0, # TODO
     }
     # average everything out
+    brier_cumsum = 0
+    brier_weight = 0
     for xv in xbins:
         xb = xbins[xv]
-        if len(xb['v']):
-            sumproduct = sum([xb['v'][i]*xb['w'][i] for i in range(len(xb['v']))])
-            weight_sum = sum(xb['w'])
+        if len(xb['resolved']):
+            sumproduct = sum([xb['resolved'][i]*xb['weight'][i] for i in range(len(xb['resolved']))])
+            weight_sum = sum(xb['weight'])
             data['x'].append(xv)
             data['y'].append(sumproduct / weight_sum)
-            data['num_markets'].append(len(xb['v']))
-            data['num_markets_total'] += len(xb['v'])
+            brier_cumsum += sum([(xb['resolved'][i]-xb['forecast'][i])**2 * xb['weight'][i] for i in range(len(xb['resolved']))])
+            brier_weight += sum([xb['weight'][i] for i in range(len(xb['resolved']))])
+            data['brier_score'] = round(brier_cumsum / brier_weight,4)
+            data['num_markets'].append(len(xb['resolved']))
+            data['num_markets_total'] += len(xb['resolved'])
     return jsonify(data)
 
 if __name__ == "__main__":
     print('App started.')
     scheduler.add_job(
-        refresh_data, 
-        'interval', 
-        minutes=5, 
-        start_date=(datetime.now()+timedelta(seconds=15))
+        refresh_data, 'interval', minutes=60, 
+        start_date=(datetime.now()+timedelta(seconds=10))
         )
     scheduler.start()
     serve(app, listen='*:80')

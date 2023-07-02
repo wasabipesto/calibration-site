@@ -101,6 +101,20 @@
                 <input class="input" type="text" name="group_text" id="group_text" disabled />
               </div>
             </div>
+            <label class="label" for="description_length_val">Description Length</label>
+            <div class="field has-addons">
+              <p class="control">
+                <span class="select">
+                  <select id="description_length_mod" disabled>
+                    <option value="gt">≥</option>
+                    <option value="lt">≤</option>
+                  </select>
+                </span>
+              </p>
+              <div class="control">
+                <input class="input" type="number" name="description_length_val" id="description_length_val" disabled />
+              </div>
+            </div>
           </div>
           <div class="column">
             <label class="label" for="volume_val">Market Volume</label>
@@ -108,8 +122,8 @@
               <p class="control">
                 <span class="select">
                   <select id="volume_mod">
-                    <option value="gt">></option>
-                    <option value="lt"><</option>
+                    <option value="gt">≥</option>
+                    <option value="lt">≤</option>
                   </select>
                 </span>
               </p>
@@ -125,8 +139,8 @@
               <p class="control">
                 <span class="select">
                   <select id="liquidity_mod">
-                    <option value="gt">></option>
-                    <option value="lt"><</option>
+                    <option value="gt">≥</option>
+                    <option value="lt">≤</option>
                   </select>
                 </span>
               </p>
@@ -142,8 +156,8 @@
               <p class="control">
                 <span class="select">
                   <select id="payout_mod" disabled>
-                    <option value="gt">></option>
-                    <option value="lt"><</option>
+                    <option value="gt">≥</option>
+                    <option value="lt">≤</option>
                   </select>
                 </span>
               </p>
@@ -159,8 +173,8 @@
               <p class="control">
                 <span class="select">
                   <select id="num_traders_mod" disabled>
-                    <option value="gt">></option>
-                    <option value="lt"><</option>
+                    <option value="gt">≥</option>
+                    <option value="lt">≤</option>
                   </select>
                 </span>
               </p>
@@ -173,8 +187,8 @@
               <p class="control">
                 <span class="select">
                   <select id="num_comments_mod" disabled>
-                    <option value="gt">></option>
-                    <option value="lt"><</option>
+                    <option value="gt">≥</option>
+                    <option value="lt">≤</option>
                   </select>
                 </span>
               </p>
@@ -189,8 +203,8 @@
               <p class="control">
                 <span class="select">
                   <select id="date_created_mod">
-                    <option value="before">Before</option>
-                    <option value="after">After</option>
+                    <option value="lt">Before</option>
+                    <option value="gt">After</option>
                   </select>
                 </span>
               </p>
@@ -203,8 +217,8 @@
               <p class="control">
                 <span class="select">
                   <select id="date_closed_mod">
-                    <option value="before">Before</option>
-                    <option value="after">After</option>
+                    <option value="lt">Before</option>
+                    <option value="gt">After</option>
                   </select>
                 </span>
               </p>
@@ -217,8 +231,8 @@
               <p class="control">
                 <span class="select">
                   <select id="open_days_mod">
-                    <option value="gt">></option>
-                    <option value="lt"><</option>
+                    <option value="gt">≥</option>
+                    <option value="lt">≤</option>
                   </select>
                 </span>
               </p>
@@ -230,14 +244,14 @@
               </p>
             </div>
           </div>
-          <div class="column is-narrow">
+          <div class="column is-2">
             <div class="field">
               <div class="control is-grouped-centered">
                 <button class="button is-link" type="submit">Apply</button>
                 <button class="button is-light" type="reset">Reset</button>
               </div>
             </div>
-            <div id="query_response_details"></div>
+            <div id="status_reponse"></div>
           </div>
         </div>
       </form>
@@ -246,6 +260,10 @@
     <script>
       document.getElementById('options_form').addEventListener('submit', function (event) {
         event.preventDefault()
+
+        // Show loading text
+        updateStatus(['Loading...'])
+
         // List of items to submit
         const params = [
           'xbin_modifier',
@@ -295,6 +313,7 @@
       document.addEventListener('DOMContentLoaded', function () {
         // Render placeholder
         updateGraph({
+          status: 'loading',
           x: [],
           y: [],
           title: 'Calibration Data Loading...',
@@ -317,6 +336,15 @@
       })
 
       function updateGraph(data) {
+        // Update status text
+        if (data.status == 'success') {
+          updateStatus(['Markets in sample: ' + data.num_markets_total, 'Brier score: ' + data.brier_score])
+        } else if (data.status == 'loading') {
+          updateStatus(['Loading...'])
+        } else if (data.status == 'error') {
+          updateStatus([data.error_description])
+        }
+
         // Use Plotly to create and update the graph
         var traces = [
           {
@@ -362,12 +390,14 @@
         Plotly.newPlot('graph', traces, layout, config)
       }
 
-      function updateResponseField(data) {
-        if (data.status == 'success') {
-          document.getElementById('query_response_details').textContent = 'Markets in sample: ' + data.num_markets_total
-        } else if (data.status == 'error') {
-          document.getElementById('query_response_details').textContent = data.description
-        }
+      function updateResponseField(data) {}
+
+      function updateStatus(lines) {
+        var html = ''
+        lines.forEach((line) => {
+          html += '<p>' + line + '</p>'
+        })
+        document.getElementById('status_reponse').innerHTML = html
       }
     </script>
   </body>

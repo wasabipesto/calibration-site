@@ -37,8 +37,8 @@
 | Adjustable x-bin size | ✅ Implemented |
 | Show number of markets in each bin | ⏳ Not Implemented |
 | Show total number of markets in sample | ✅ Implemented |
-| Show Brier score | ⏳ Not Implemented |
+| Show Brier score | ✅ Implemented |
 | Create multiple plots | ⛔ Not Planned |
-| Show table of markets | ⏳ Not Implemented |
+| Show table of markets | ⛔ Not Planned |
 | Description/help text | ⏳ Not Implemented |
 | Link to download db | ⏳ Not Implemented |
