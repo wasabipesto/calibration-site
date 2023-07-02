@@ -2,22 +2,16 @@
 
 TODO:
 
-- [x] Scheduled tasks
-    - [x] Download bulk data from the official API
-    - [ ] Download individual datafiles from the official API
-        - [ ] Alternatively, download bulk bets and comments
-    - [x] Save all market data in sqlite
-- [ ] Webserver backend
-    - [ ] Serve an API with configurable filters & methods
-        - [ ] Query from sqlite
-    - [ ] Serve simple HTML/JS to query API and build plot
-        - [ ] Select method
-        - [ ] Select criteria
-        - [ ] Select multiple criteria at once
-        - [ ] Create multiple plots
-        - [ ] Link to download sqlite file
+- [ ] Backend: Accept filters from frontend
+- [ ] Frontend: Select filters
+- [ ] Frontend: Select method (x-axis)
+- [ ] Frontend: Select weight (y-axis)
+- [ ] Frontend: Create multiple plots
+- [ ] Frontend: Show table of markets 
+- [ ] Frontend: Description/help text
+- [ ] Frontend: Link to download sqlite file
 
-Calculations, filters, and methods:
+Option & modifier support:
 
 - Filters:
     - [ ] Creator username (text input)
@@ -39,6 +33,12 @@ Calculations, filters, and methods:
     - [ ] Resolved YES
     - [ ] Resolved NO
 - Methods (x-axis):
-    - [ ] Resolved probability (N/Y -> 0/100%)
+    - [x] Resolved probability (N/Y -> 0/100%)
     - [ ] Probability at {1,100}% through
     - [ ] Time-weighted average probability
+- Weights (y-axis):
+    - [x] No weighting
+    - [ ] Weight markets by volume
+    - [ ] Weight markets by payout (value)
+    - [ ] Weight markets by number of traders
+    - [ ] Weight markets by number of comments

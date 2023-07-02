@@ -4,7 +4,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
 import requests
 import sqlite3
-import uuid
 import peewee as pw
 import numpy as np
 import os
@@ -17,12 +16,14 @@ class BaseModel(pw.Model):
         database = db
 
 class Market(BaseModel):
-    manifold_id      = pw.CharField(unique=True)
-    last_updated     = pw.DateTimeField(default=datetime.now)
+    manifold_id = pw.CharField(unique=True)
+    last_updated = pw.DateTimeField(default=datetime.now)
     creator_username = pw.CharField()
-    created_date     = pw.DateTimeField()
-    closed_date      = pw.DateTimeField()
-    resolved_date    = pw.DateTimeField()
+    created_date = pw.DateTimeField()
+    closed_date = pw.DateTimeField()
+    resolved_date = pw.DateTimeField()
+    resolved_prob = pw.DecimalField()
+    prob_at_resolution = pw.DecimalField()
 
 app = Flask(__name__)
 scheduler = BackgroundScheduler()
@@ -55,34 +56,66 @@ def get_all_markets():
             break
     return data
 
-def clean_timestamp(ts):
-    if ts:
-        return datetime.utcfromtimestamp(min(int(ts)/1000,253401772800))
+def get_full_market(market_id):
+    return requests.get(
+        'https://manifold.markets/api/v0/market/'+market_id
+        ).json()
+
+def get_timestamp(market, attr):
+    return datetime.utcfromtimestamp(
+        min(int(
+            market.get(attr)
+        )/1000,253401772800)
+    )
+
+def get_resolved_prob(market):
+    if market.get('resolution') == 'NO':
+        return 0
+    elif market.get('resolution') == 'YES':
+        return 1
+    elif market.get('resolution') == 'MKT':
+        try:
+            return market['resolutionProbability']
+        except KeyError:
+            print('WARN: resolutionProbability does not exist on market', market['id'], '- using 0 instead.')
+            return 0
     else:
-        return None
+        raise ValueError('Could not get resolved probability:', market)
+
+def get_prob_at_resolution(market):
+    return market['probability']
 
 def refresh_data():
-    print('Starting data refresh...')
+    print('Starting cache refresh...')
+    # download litemarkets
     markets_raw = get_all_markets()
+    # download list of all saved IDs
+    cached_ids = [market['manifold_id'] for market in Market.select(Market.manifold_id).dicts().iterator()]
     
     print('Starting data download...')
     newly_resolved_markets = []
     for market in markets_raw:
-        if not markets_raw.index(market) % 1000:
+        if not markets_raw.index(market) % 5000:
+            # show progress
             print('Data download:', markets_raw.index(market), '/', len(markets_raw))
-        if market.get('isResolved') and market.get('outcomeType') == 'BINARY' and market.get('mechanism') == 'cpmm-1':
-            try:
-                market_from_db = Market.get(Market.manifold_id == market['id'])
-            except Market.DoesNotExist:
-                newly_resolved_markets.append({
-                    'manifold_id': market['id'],
-                    'creator_username': market['creatorUsername'],
-                    'created_date': clean_timestamp(market.get('createdTime')),
-                    'closed_date': clean_timestamp(market.get('closeTime')),
-                    'resolved_date': clean_timestamp(market.get('resolutionTime')),
-                })
+        if market.get('isResolved') and \
+            market.get('mechanism') == 'cpmm-1' and \
+            market.get('outcomeType') == 'BINARY' and \
+            not market.get('resolution') == 'CANCEL' and \
+            not market['id'] in cached_ids:
+            #fmarket = get_full_market(market['id'])
+            newly_resolved_markets.append({
+                'manifold_id': market['id'],
+                'creator_username': market['creatorUsername'],
+                'created_date': get_timestamp(market, 'createdTime'),
+                'closed_date': get_timestamp(market, 'closeTime'),
+                'resolved_date': get_timestamp(market, 'resolutionTime'),
+                'resolved_prob': get_resolved_prob(market),
+                'prob_at_resolution': get_prob_at_resolution(market),
+            })
 
     if len(newly_resolved_markets):
+        # save everything to the db
         print('Saving', len(newly_resolved_markets), 'newly resolved markets...')
         insert_batch_size = 100
         with db.atomic():
@@ -103,26 +136,28 @@ def index_page():
 def get_data():
     print('Fulfilling request for data...')
 
-    # Get filter parameters from the request
+    # get filter parameters from the request
     filters = request.form.getlist('filter')
     print(filters)
 
-    # TODO: Query the database and calculate plot
+    xaxis_attr = 'prob_at_resolution' # TODO: vary by method
+    markets_filtered = Market.select() # TODO: add filters
 
-    # Placeholder data
-    data1 = {
-        "x": [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1],
-        "y": [0,0.09,0.18,0.31,0.42,0.5,0.59,0.69,0.78,0.85,0.92]
-    }
-    data2 = {
-        "x": [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1],
-        "y": [0,0.04,0.09,0.15,0.21,0.27,0.46,0.71,0.83,0.84,0.85]
-    }
-    if filters == ['default']:
-        data = data1
-    else:
-        data = data2
+    # collect data in x-axis buckets
+    buckets = {}
+    bucket_size = 2 # 1: tenths, 2: hundredths
+    for market in markets_filtered.dicts().iterator():
+        b = round(float(market[xaxis_attr]),bucket_size) + 1/10**bucket_size/2
+        if not b in buckets.keys():
+            buckets.update({b:[]})
+        buckets[b].append(market['resolved_prob'])
 
+    # average everything out
+    # TODO: add customizable weights
+    data = {
+        'x': list(buckets.keys()),
+        'y': [np.average(i) for i in buckets.values()]
+    }
     return jsonify(data)
 
 if __name__ == "__main__":
