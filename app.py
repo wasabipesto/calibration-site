@@ -156,16 +156,6 @@ def filter_again_equals(markets, request, attr):
     #print(str(len(markets))+' markets remaining after '+attr+' filter.')
     return markets
 
-def filter_again_resolution(markets, request, attr):
-    if request.form.get(attr) == 'yes':
-        markets = markets.where(Market.resolved_prob == 1)
-    elif request.form.get(attr) == 'no':
-        markets = markets.where(Market.resolved_prob == 0)
-    elif request.form.get(attr) == 'mkt':
-        markets = markets.where(Market.resolved_prob > 0 & Market.resolved_prob < 1)
-    #print(str(len(markets))+' markets remaining after '+attr+' filter.')
-    return markets
-
 @app.route('/manifold/get_data', methods=['POST'])
 def get_data():
     print('POST /manifold/get_data')
@@ -175,7 +165,6 @@ def get_data():
 
     # filter by each criterion
     #markets = filter_again_bool(markets, request, 'is_predictive')
-    markets = filter_again_resolution(markets, request, 'resolution')
     markets = filter_again_equals(markets, request, 'creator_username')
     #markets = filter_again_contains(markets, request, 'group_string')
     markets = filter_again_gtlt(markets, request, 'volume')
