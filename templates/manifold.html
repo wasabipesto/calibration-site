@@ -5,6 +5,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" />
+    <style>
+      .modebar-btn .icon {
+        height: 0.75em;
+        width: 0.75em;
+      }
+    </style>
   </head>
   <body>
     <div class="container">
@@ -316,6 +322,7 @@
           status: 'loading',
           x: [],
           y: [],
+          num_markets: [],
           title: 'Calibration Data Loading...',
           xlabel: 'Loading...',
           ylabel: '',
@@ -350,7 +357,8 @@
           {
             x: data.x,
             y: data.y,
-            name: 'Actual Calibration',
+            text: data.num_markets.map((i) => i + ' markets'),
+            name: 'Calibration',
             type: 'scatter',
             mode: 'markers',
             marker: {
@@ -361,7 +369,7 @@
           {
             x: [0, 1],
             y: [0, 1],
-            name: 'Perfect Calibration',
+            name: 'Perfect',
             type: 'lines',
             mode: 'line',
             line: {

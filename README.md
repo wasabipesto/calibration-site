@@ -35,7 +35,7 @@
 | Weight markets by number of comments | ⚠️ Requires FullMarket |
 | **Other** |
 | Adjustable x-bin size | ✅ Implemented |
-| Show number of markets in each bin | ⏳ Not Implemented |
+| Show number of markets in each bin | ✅ Implemented |
 | Show total number of markets in sample | ✅ Implemented |
 | Show Brier score | ✅ Implemented |
 | Create multiple plots | ⛔ Not Planned |
