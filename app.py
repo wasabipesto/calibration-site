@@ -17,10 +17,14 @@ class BaseModel(pw.Model):
 
 class Market(BaseModel):
     manifold_id = pw.CharField(unique=True)
+    manifold_url = pw.CharField()
+    question_text = pw.CharField()
     creator_username = pw.CharField()
     created_date = pw.DateTimeField()
     closed_date = pw.DateTimeField()
+    open_days = pw.IntegerField()
     volume = pw.IntegerField()
+    liquidity = pw.IntegerField()
     resolved_date = pw.DateTimeField()
     resolved_prob = pw.DecimalField()
     prob_at_close = pw.DecimalField()
@@ -82,8 +86,11 @@ def get_resolved_prob(market):
     else:
         raise ValueError('Could not get resolved probability:', market)
 
-def prob_at_close(market):
+def get_prob_at_close(market):
     return market['probability']
+
+def get_open_days(market):
+    return (get_timestamp(market, 'closeTime')-get_timestamp(market, 'createdTime')).days
 
 def refresh_data():
     print('Starting cache refresh...')
@@ -100,7 +107,7 @@ def refresh_data():
     for market in markets_raw:
         if not markets_raw.index(market) % 5000:
             # show progress
-            print('Data download:', markets_raw.index(market), '/', len(markets_raw))
+            print('Data download:', markets_raw.index(market), '/', len(markets_raw), '@', round(markets_raw.index(market)/(datetime.now()-ts0).seconds), 'mps')
         if market.get('isResolved') and \
             market.get('mechanism') == 'cpmm-1' and \
             market.get('outcomeType') == 'BINARY' and \
@@ -109,13 +116,17 @@ def refresh_data():
             #fmarket = get_full_market(market['id'])
             newly_resolved_markets.append({
                 'manifold_id': market['id'],
+                'manifold_url': market['url'],
+                'question_text': market['question'],
                 'creator_username': market['creatorUsername'],
                 'created_date': get_timestamp(market, 'createdTime'),
                 'closed_date': get_timestamp(market, 'closeTime'),
+                'open_days': get_open_days(market),
                 'volume': market['volume'],
+                'liquidity': market['totalLiquidity'],
                 'resolved_date': get_timestamp(market, 'resolutionTime'),
                 'resolved_prob': get_resolved_prob(market),
-                'prob_at_close': prob_at_close(market),
+                'prob_at_close': get_prob_at_close(market),
             })
     print('Downloaded all data in', (datetime.now()-ts0).seconds, 'seconds.')
 
@@ -141,7 +152,7 @@ def index_base():
 def index_manifold():
     return render_template('manifold.html')
 
-def filter_again_gtlt(markets, request, attr):
+def filter_numeric_gtlt(markets, request, attr):
     if request.form.get(attr+'_val') and request.form.get(attr+'_mod'):
         if request.form.get(attr+'_mod') == 'gt':
             markets = markets.where(getattr(Market, attr) >= request.form.get(attr+'_val'))
@@ -150,9 +161,15 @@ def filter_again_gtlt(markets, request, attr):
     #print(str(len(markets))+' markets remaining after '+attr+' filter.')
     return markets
 
-def filter_again_equals(markets, request, attr):
+def filter_text_equals(markets, request, attr):
     if request.form.get(attr):
         markets = markets.where(getattr(Market, attr) == request.form.get(attr))
+    #print(str(len(markets))+' markets remaining after '+attr+' filter.')
+    return markets
+
+def filter_text_conatins(markets, request, attr):
+    if request.form.get(attr):
+        markets = markets.where(getattr(Market, attr).contains(request.form.get(attr)))
     #print(str(len(markets))+' markets remaining after '+attr+' filter.')
     return markets
 
@@ -164,17 +181,18 @@ def get_data():
     markets = Market.select()
 
     # filter by each criterion
-    #markets = filter_again_bool(markets, request, 'is_predictive')
-    markets = filter_again_equals(markets, request, 'creator_username')
-    #markets = filter_again_contains(markets, request, 'group_string')
-    markets = filter_again_gtlt(markets, request, 'volume')
-    #markets = filter_again_gtlt(markets, request, 'liquidity')
-    #markets = filter_again_gtlt(markets, request, 'payout')
-    #markets = filter_again_gtlt(markets, request, 'num_traders')
-    #markets = filter_again_gtlt(markets, request, 'num_comments')
-    #markets = filter_again_gtlt(markets, request, 'date_created')
-    #markets = filter_again_gtlt(markets, request, 'date_closed')
-    #markets = filter_again_gtlt(markets, request, 'open_days')
+    #markets = filter_bool(markets, request, 'is_predictive')
+    markets = filter_text_equals(markets, request, 'creator_username')
+    markets = filter_text_conatins(markets, request, 'question_text')
+    #markets = filter_text_conatins(markets, request, 'group_string')
+    markets = filter_numeric_gtlt(markets, request, 'volume')
+    markets = filter_numeric_gtlt(markets, request, 'liquidity')
+    #markets = filter_numeric_gtlt(markets, request, 'payout')
+    #markets = filter_numeric_gtlt(markets, request, 'num_traders')
+    #markets = filter_numeric_gtlt(markets, request, 'num_comments')
+    markets = filter_numeric_gtlt(markets, request, 'date_created')
+    markets = filter_numeric_gtlt(markets, request, 'date_closed')
+    markets = filter_numeric_gtlt(markets, request, 'open_days')
 
     if len(markets) == 0:
         return jsonify({
@@ -246,7 +264,7 @@ def get_data():
     # assemble data to return
     data = {
         'status': 'success',
-        'x': list(xbins.keys()),
+        'x': [],
         'y': [],
         'title': 'Calibration Plot',
         'xlabel': xbin_data[xaxis_attr]['xlabel'],
@@ -259,10 +277,10 @@ def get_data():
     for xv in xbins:
         xb = xbins[xv]
         if len(xb['v']):
-            value_sumproduct = sum([xb['v'][i]*xb['w'][i] for i in range(len(xb['v']))])
+            sumproduct = sum([xb['v'][i]*xb['w'][i] for i in range(len(xb['v']))])
             weight_sum = sum(xb['w'])
             data['x'].append(xv)
-            data['y'].append(value_sumproduct / weight_sum)
+            data['y'].append(sumproduct / weight_sum)
             data['num_markets'].append(len(xb['v']))
             data['num_markets_total'] += len(xb['v'])
     return jsonify(data)

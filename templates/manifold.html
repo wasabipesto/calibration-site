@@ -60,8 +60,6 @@
                 </div>
               </div>
             </div>
-          </div>
-          <div class="column">
             <label class="label" for="is_predictive">Predictive Label</label>
             <div class="field">
               <div class="control is-expanded">
@@ -74,16 +72,33 @@
                 </div>
               </div>
             </div>
+          </div>
+          <div class="column">
             <label class="label" for="creator_username">Creator Username</label>
-            <div class="field">
+            <div class="field has-addons">
+              <p class="control">
+                <a class="button is-static">equals</a>
+              </p>
               <div class="control">
                 <input class="input" type="text" name="creator_username" id="creator_username" />
               </div>
             </div>
-            <label class="label" for="group_string">Group String</label>
-            <div class="field">
+            <label class="label" for="question_text">Question Text</label>
+            <div class="field has-addons">
+              <p class="control">
+                <a class="button is-static">contains</a>
+              </p>
               <div class="control">
-                <input class="input" type="text" name="group_string" id="group_string" disabled />
+                <input class="input" type="text" name="question_text" id="question_text" />
+              </div>
+            </div>
+            <label class="label" for="group_text">Group</label>
+            <div class="field has-addons">
+              <p class="control">
+                <a class="button is-static">contains</a>
+              </p>
+              <div class="control">
+                <input class="input" type="text" name="group_text" id="group_text" disabled />
               </div>
             </div>
           </div>
@@ -238,7 +253,8 @@
           'ybin_modifier',
           'is_predictive',
           'creator_username',
-          'group_string',
+          'question_text',
+          'group_text',
           'volume_val',
           'volume_mod',
           'liquidity_val',
@@ -347,7 +363,11 @@
       }
 
       function updateResponseField(data) {
-        document.getElementById('query_response_details').textContent = 'Markets in sample: ' + data.num_markets_total
+        if (data.status == 'success') {
+          document.getElementById('query_response_details').textContent = 'Markets in sample: ' + data.num_markets_total
+        } else if (data.status == 'error') {
+          document.getElementById('query_response_details').textContent = data.description
+        }
       }
     </script>
   </body>

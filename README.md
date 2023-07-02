@@ -9,7 +9,7 @@
 | **Filters** |
 | Is predictive/serious | ⚠️ Requires FullMarket |
 | Was re-resolved or resolved by admins | ⛔ Unavailable |
-| Creator username (text input) | ⏳ Not Implemented |
+| Creator username (text input) | ✅ Implemented |
 | Group label (text input) | ⚠️ Requires FullMarket |
 | Market volume | ✅ Implemented |
 | Liquidity pool | ⏳ Not Implemented |
