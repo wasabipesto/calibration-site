@@ -2,10 +2,11 @@
 
 TODO:
 
-- [ ] Scheduled tasks
-    - [ ] Download bulk data from the official API
-    - [ ] Refresh individual datafiles from the official API
-    - [ ] Save all market data in sqlite
+- [x] Scheduled tasks
+    - [x] Download bulk data from the official API
+    - [ ] Download individual datafiles from the official API
+        - [ ] Alternatively, download bulk bets and comments
+    - [x] Save all market data in sqlite
 - [ ] Webserver backend
     - [ ] Serve an API with configurable filters & methods
         - [ ] Query from sqlite
