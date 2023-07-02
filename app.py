@@ -272,8 +272,9 @@ def get_data():
         'ylabel': ybin_data[yaxis_attr]['ylabel'],
         'num_markets': [],
         'num_markets_total': 0,
-        'brier_score': 0, # TODO
+        'brier_score': 0,
     }
+    
     # average everything out
     brier_cumsum = 0
     brier_weight = 0

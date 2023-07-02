@@ -12,7 +12,7 @@
 | Creator username (text input) | ✅ Implemented |
 | Group label (text input) | ⚠️ Requires FullMarket |
 | Market volume | ✅ Implemented |
-| Liquidity pool | ⏳ Not Implemented |
+| Liquidity pool | ✅ Implemented |
 | Total payout amount (value) | ⚠️ Requires FullMarket |
 | Number of trades | ⚠️ Requires FullMarket |
 | Number of unique traders | ⚠️ Requires FullMarket |
@@ -42,3 +42,4 @@
 | Show table of markets | ⛔ Not Planned |
 | Description/help text | ⏳ Not Implemented |
 | Link to download db | ⏳ Not Implemented |
+| Size datapoints by market count/volume | ⏳ Not Implemented |
