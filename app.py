@@ -141,21 +141,57 @@ def index_base():
 def index_manifold():
     return render_template('manifold.html')
 
+def filter_again_gtlt(markets, request, attr):
+    if request.form.get(attr+'_val') and request.form.get(attr+'_mod'):
+        if request.form.get(attr+'_mod') == 'gt':
+            markets = markets.where(getattr(Market, attr) >= request.form.get(attr+'_val'))
+        elif request.form.get(attr+'_mod') == 'lt':
+            markets = markets.where(getattr(Market, attr) <= request.form.get(attr+'_val'))
+    #print(str(len(markets))+' markets remaining after '+attr+' filter.')
+    return markets
+
+def filter_again_equals(markets, request, attr):
+    if request.form.get(attr):
+        markets = markets.where(getattr(Market, attr) == request.form.get(attr))
+    #print(str(len(markets))+' markets remaining after '+attr+' filter.')
+    return markets
+
+def filter_again_resolution(markets, request, attr):
+    if request.form.get(attr) == 'yes':
+        markets = markets.where(Market.resolved_prob == 1)
+    elif request.form.get(attr) == 'no':
+        markets = markets.where(Market.resolved_prob == 0)
+    elif request.form.get(attr) == 'mkt':
+        markets = markets.where(Market.resolved_prob > 0 & Market.resolved_prob < 1)
+    #print(str(len(markets))+' markets remaining after '+attr+' filter.')
+    return markets
+
 @app.route('/manifold/get_data', methods=['POST'])
 def get_data():
-    print('Fulfilling request for data...')
+    print('POST /manifold/get_data')
     
     # get all markets
-    markets_filtered = Market.select()
-    # filter by each criteria
-    if request.form.get('min_volume'):
-        markets_filtered = markets_filtered.where(
-            Market.volume >= request.form.get('min_volume')
-        )
-    if request.form.get('min_open_days'):
-        markets_filtered = markets_filtered.where(
-            (Market.created_date - Market.closed_date).days >= request.form.get('min_open_days')
-        )
+    markets = Market.select()
+
+    # filter by each criterion
+    #markets = filter_again_bool(markets, request, 'is_predictive')
+    markets = filter_again_resolution(markets, request, 'resolution')
+    markets = filter_again_equals(markets, request, 'creator_username')
+    #markets = filter_again_contains(markets, request, 'group_string')
+    markets = filter_again_gtlt(markets, request, 'volume')
+    #markets = filter_again_gtlt(markets, request, 'liquidity')
+    #markets = filter_again_gtlt(markets, request, 'payout')
+    #markets = filter_again_gtlt(markets, request, 'num_traders')
+    #markets = filter_again_gtlt(markets, request, 'num_comments')
+    #markets = filter_again_gtlt(markets, request, 'date_created')
+    #markets = filter_again_gtlt(markets, request, 'date_closed')
+    #markets = filter_again_gtlt(markets, request, 'open_days')
+
+    if len(markets) == 0:
+        return jsonify({
+            'status': 'error',
+            'description': 'No markets in sample!',
+        })
 
     # set x-axis method
     xbin_data = {
@@ -197,10 +233,8 @@ def get_data():
     # generate x-axis bins
     xbins = {}
     if request.form.get('xbin_size') and \
-        float(request.form.get('xbin_size')) in [
-            0.005, 0.01, 0.015, 0.02, 0.025, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1
-        ]:
-        xbin_size = float(request.form.get('xbin_size'))
+        round(float(request.form.get('xbin_size')),3) in [round(i,3) for i in np.arange(0.005, 1, 0.005)]:
+        xbin_size = round(float(request.form.get('xbin_size')),3)
     else:
         xbin_size = 0.01
     xb = xbin_size/2
@@ -208,7 +242,7 @@ def get_data():
         xbins.update({round(xb,4):{'v':[],'w':[]}})
         xb+=xbin_size
     
-    for market in markets_filtered.dicts().iterator():
+    for market in markets.dicts().iterator():
         # calculate appropriate xaxis bins
         xb = round(int((float(market[xaxis_attr]) - xbin_size/2) / xbin_size) * xbin_size + xbin_size/2, 4)
         # calculate appropriate yaxis weight
@@ -222,6 +256,7 @@ def get_data():
 
     # assemble data to return
     data = {
+        'status': 'success',
         'x': list(xbins.keys()),
         'y': [],
         'title': 'Calibration Plot',
@@ -232,12 +267,15 @@ def get_data():
         #'brier_score': 0 # TODO
     }
     # average everything out
-    for xb in xbins.values():
-        value_sumproduct = sum([xb['v'][i]*xb['w'][i] for i in range(len(xb['v']))])
-        weight_sum = sum(xb['w'])
-        data['y'].append(value_sumproduct / weight_sum)
-        data['num_markets'].append(len(xb['v']))
-        data['num_markets_total'] += len(xb['v'])
+    for xv in xbins:
+        xb = xbins[xv]
+        if len(xb['v']):
+            value_sumproduct = sum([xb['v'][i]*xb['w'][i] for i in range(len(xb['v']))])
+            weight_sum = sum(xb['w'])
+            data['x'].append(xv)
+            data['y'].append(value_sumproduct / weight_sum)
+            data['num_markets'].append(len(xb['v']))
+            data['num_markets_total'] += len(xb['v'])
     return jsonify(data)
 
 if __name__ == "__main__":

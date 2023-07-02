@@ -66,10 +66,10 @@
             <div class="field">
               <div class="control is-expanded">
                 <div class="select is-fullwidth">
-                  <select name="is_predictive" id="is_predictive">
+                  <select name="is_predictive" id="is_predictive" disabled>
                     <option value="all" selected>All markets</option>
-                    <option value="predictive" disabled>Predictive only</option>
-                    <option value="nonpredictive" disabled>Non-predictive only</option>
+                    <option value="predictive">Predictive only</option>
+                    <option value="nonpredictive">Non-predictive only</option>
                   </select>
                 </div>
               </div>
@@ -90,13 +90,13 @@
             <label class="label" for="creator_username">Creator Username</label>
             <div class="field">
               <div class="control">
-                <input class="input" type="text" name="creator_username" id="creator_username" disabled />
+                <input class="input" type="text" name="creator_username" id="creator_username" />
               </div>
             </div>
-            <label class="label" for="group_label">Group Label</label>
+            <label class="label" for="group_string">Group String</label>
             <div class="field">
               <div class="control">
-                <input class="input" type="text" name="group_label" id="group_label" disabled />
+                <input class="input" type="text" name="group_string" id="group_string" disabled />
               </div>
             </div>
           </div>
@@ -252,7 +252,7 @@
           'is_predictive',
           'resolution',
           'creator_username',
-          'group_label',
+          'group_string',
           'volume_val',
           'volume_mod',
           'liquidity_val',
@@ -274,11 +274,7 @@
         const bodyParams = new URLSearchParams()
         params.forEach((param) => {
           const element = document.getElementById(param)
-          if (element) {
-            bodyParams.append(param, element.value)
-          } else {
-            console.log('Element ' + param + ' is null.')
-          }
+          bodyParams.append(param, element.value)
         })
 
         // Send AJAX request to the backend
@@ -356,8 +352,8 @@
             range: [0, 1],
             tickformat: ',.0%',
           },
-          height: 500,
-          margin: { l: 60, r: 40, t: 60, b: 40 },
+          //height: 500,
+          //margin: { l: 60, r: 40, t: 60, b: 40 },
           showlegend: false,
         }
         const config = { responsive: true }
