@@ -87,10 +87,13 @@ def prob_at_close(market):
 
 def refresh_data():
     print('Starting cache refresh...')
+    # start timer
+    ts0 = datetime.now()
     # download litemarkets
     markets_raw = get_all_markets()
     # download list of all saved IDs
     cached_ids = [market['manifold_id'] for market in Market.select(Market.manifold_id).dicts().iterator()]
+    print('Updated cache in', (datetime.now()-ts0).seconds, 'seconds.')
     
     print('Starting data download...')
     newly_resolved_markets = []
@@ -114,6 +117,7 @@ def refresh_data():
                 'resolved_prob': get_resolved_prob(market),
                 'prob_at_close': prob_at_close(market),
             })
+    print('Downloaded all data in', (datetime.now()-ts0).seconds, 'seconds.')
 
     if len(newly_resolved_markets):
         # save everything to the db
@@ -172,25 +176,34 @@ def get_data():
     if request.form.get('ybin_modifier') in ybin_weight_attr_map.keys():
         yaxis_attr = ybin_weight_attr_map[request.form.get('ybin_modifier')]
     else:
-        yaxis_attr = 'weight_none'
+        yaxis_attr = 'none'
 
     # collect data in x-axis buckets
     buckets = {}
     bucket_size = 2 # 1: tenths, 2: hundredths
     for market in markets_filtered.dicts().iterator():
+        # calculate appropriate xaxis bucket
         b = round(float(market[xaxis_attr]),bucket_size) + 1/10**bucket_size/2
         if not b in buckets.keys():
-            buckets.update({b:[]})
+            buckets.update({b:{'v':[],'w':[]}})
+        # calculate appropriate yaxis weight
         if yaxis_attr == 'none':
-            buckets[b].append(market['resolved_prob'])
+            yaxis_weight = 1
         else:
-            buckets[b].append(market['resolved_prob']*market[yaxis_attr])
+            yaxis_weight = market[yaxis_attr]
+        # save data
+        buckets[b]['v'].append(market['resolved_prob'])
+        buckets[b]['w'].append(yaxis_weight)
 
     # average everything out
     data = {
         'x': list(buckets.keys()),
-        'y': [np.average(i) for i in buckets.values()]
+        'y': [],
     }
+    for b in buckets.values():
+        value_sumproduct = sum([b['v'][i]*b['w'][i] for i in range(len(b['v']))])
+        weight_sum = sum(b['w'])
+        data['y'].append(value_sumproduct / weight_sum)
     return jsonify(data)
 
 if __name__ == "__main__":
