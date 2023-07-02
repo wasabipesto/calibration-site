@@ -337,7 +337,8 @@
           status: 'loading',
           x: [],
           y: [],
-          num_markets: [],
+          point_size: [],
+          point_desc: [],
           title: 'Calibration Data Loading...',
           xlabel: 'Loading...',
           ylabel: '',
@@ -372,13 +373,13 @@
           {
             x: data.x,
             y: data.y,
-            text: data.num_markets.map((i) => i + ' markets'),
+            text: data.point_desc,
             name: 'Calibration',
             type: 'scatter',
             mode: 'markers',
             marker: {
               color: 'rgb(227, 119, 194)',
-              size: 10,
+              size: data.point_size,
             },
           },
           {

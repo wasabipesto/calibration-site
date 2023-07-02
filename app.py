@@ -173,6 +173,23 @@ def filter_text_conatins(markets, request, attr):
     #print(str(len(markets))+' markets remaining after '+attr+' filter.')
     return markets
 
+def scale_list(input_list, output_min, output_max, output_default):
+    scaled_list = []
+    input_min = min(input_list)
+    input_max = max(input_list)
+    input_range = input_max - input_min
+    output_range = output_max - output_min
+    
+    if input_min == input_max:
+        # Handle the case when all input values are the same
+        return [output_default] * len(input_list)
+
+    for value in input_list:
+        # Scale the value to the output range
+        scaled_value = ((value - input_min) / input_range) * output_range + output_min
+        scaled_list.append(scaled_value)
+    return scaled_list
+
 @app.route('/manifold/get_data', methods=['POST'])
 def get_data():
     print('POST /manifold/get_data')
@@ -237,6 +254,17 @@ def get_data():
     else:
         yaxis_attr = 'none'
 
+    if request.form.get('point_modifier') in [
+        'none', 
+        'count', 
+        'volume', 
+        #'payout', 
+        #'traders'
+    ]:
+        point_attr = request.form.get('point_modifier')
+    else:
+        point_attr = 'none'
+
     # generate x-axis bins
     xbins = {}
     if request.form.get('xbin_size') and \
@@ -246,7 +274,7 @@ def get_data():
         xbin_size = 0.01
     xb = xbin_size/2
     while xb < 1:
-        xbins.update({round(xb,4):{'forecast':[],'resolved':[],'weight':[]}})
+        xbins.update({round(xb,4):{'forecast':[],'resolved':[],'yaxis_weight':[],'point_weight':[]}})
         xb+=xbin_size
     
     for market in markets.dicts().iterator():
@@ -260,7 +288,11 @@ def get_data():
         # save data
         xbins[xb]['forecast'].append(market[xaxis_attr])
         xbins[xb]['resolved'].append(market['prob_resolved'])
-        xbins[xb]['weight'].append(yaxis_weight)
+        xbins[xb]['yaxis_weight'].append(yaxis_weight)
+        if point_attr in ['none', 'count']:
+            xbins[xb]['point_weight'].append(1)
+        else:
+            xbins[xb]['point_weight'].append(yaxis_weight)
 
     # assemble data to return
     data = {
@@ -270,33 +302,54 @@ def get_data():
         'title': 'Calibration Plot',
         'xlabel': xbin_data[xaxis_attr]['xlabel'],
         'ylabel': ybin_data[yaxis_attr]['ylabel'],
-        'num_markets': [],
+        'point_size': [],
+        'point_desc': [],
         'num_markets_total': 0,
         'brier_score': 0,
     }
-    
-    # average everything out
+
     brier_cumsum = 0
     brier_weight = 0
     for xv in xbins:
         xb = xbins[xv]
         if len(xb['resolved']):
-            sumproduct = sum([xb['resolved'][i]*xb['weight'][i] for i in range(len(xb['resolved']))])
-            weight_sum = sum(xb['weight'])
+            # calculate and save x and y values for plot
+            sumproduct = sum([xb['resolved'][i]*xb['yaxis_weight'][i] for i in range(len(xb['resolved']))])
+            weight_sum = sum(xb['yaxis_weight'])
             data['x'].append(xv)
             data['y'].append(sumproduct / weight_sum)
-            brier_cumsum += sum([(xb['resolved'][i]-xb['forecast'][i])**2 * xb['weight'][i] for i in range(len(xb['resolved']))])
-            brier_weight += sum([xb['weight'][i] for i in range(len(xb['resolved']))])
-            data['brier_score'] = round(brier_cumsum / brier_weight,4)
-            data['num_markets'].append(len(xb['resolved']))
+            # calculate overall brier score
+            brier_cumsum += sum([(xb['resolved'][i]-xb['forecast'][i])**2 * xb['yaxis_weight'][i] for i in range(len(xb['resolved']))])
+            brier_weight += sum([xb['yaxis_weight'][i] for i in range(len(xb['resolved']))])
+            # calculate and save point size and hovertext
+            if point_attr == 'none':
+                num_markets = len(xb['resolved'])
+                data['point_size'].append(10)
+                data['point_desc'].append(str(num_markets)+' markets')
+            elif point_attr == 'count':
+                num_markets = len(xb['resolved'])
+                data['point_size'].append(num_markets)
+                data['point_desc'].append(str(num_markets)+' markets')
+            else:
+                sum_attr = sum([xb['point_weight'][i] for i in range(len(xb['resolved']))])
+                data['point_size'].append(sum_attr)
+                data['point_desc'].append('M$'+str(sum_attr)+' '+point_attr)
+            # save other misc data
             data['num_markets_total'] += len(xb['resolved'])
+    
+    # save final brier score
+    data['brier_score'] = round(brier_cumsum / brier_weight, 4)
+    # rescale point sizes
+    data['point_size'] = scale_list(data['point_size'], 8, 32, 10)
+
+    # return data
     return jsonify(data)
 
 if __name__ == "__main__":
     print('App started.')
     scheduler.add_job(
         refresh_data, 'interval', minutes=60, 
-        start_date=(datetime.now()+timedelta(seconds=10))
+        start_date=(datetime.now()+timedelta(seconds=30))
         )
     scheduler.start()
     serve(app, listen='*:80')
