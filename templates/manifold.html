@@ -24,9 +24,11 @@
               <div class="control is-expanded">
                 <div class="select is-fullwidth">
                   <select name="xbin_modifier" id="xbin_modifier">
-                    <option value="prob_at_close" selected>Probability at Close</option>
-                    <option value="prob_at_midpoint" disabled>Probability at Midpoint</option>
-                    <option value="prob_time_weighted" disabled>Time-Weighted Probability</option>
+                    <option value="prob_time_weighted">Time-Weighted Probability</option>
+                    <option value="prob_at_q1">Probability at 25%</option>
+                    <option value="prob_at_q2">Probability at Midpoint</option>
+                    <option value="prob_at_q3">Probability at 75%</option>
+                    <option value="prob_at_close">Probability at Close</option>
                   </select>
                 </div>
               </div>
@@ -36,19 +38,18 @@
               <div class="control is-expanded">
                 <div class="select is-fullwidth">
                   <select name="xbin_size" id="xbin_size">
+                    <option value="0" selected>Default Size</option>
                     <option value="0.005">0.5%</option>
-                    <option value="0.010" selected>1.0%</option>
+                    <option value="0.010">1.0%</option>
                     <option value="0.015">1.5%</option>
                     <option value="0.020">2.0%</option>
                     <option value="0.025">2.5%</option>
                     <option value="0.030">3.0%</option>
                     <option value="0.040">4.0%</option>
                     <option value="0.050">5.0%</option>
-                    <option value="0.060">6.0%</option>
-                    <option value="0.070">7.0%</option>
-                    <option value="0.080">8.0%</option>
-                    <option value="0.090">9.0%</option>
+                    <option value="0.075">7.5%</option>
                     <option value="0.100">10%</option>
+                    <option value="0.150">15%</option>
                   </select>
                 </div>
               </div>
@@ -60,8 +61,8 @@
                   <select name="ybin_modifier" id="ybin_modifier">
                     <option value="none" selected>No Weight</option>
                     <option value="volume">Weight by Volume</option>
-                    <option value="payout" disabled>Weight by Payout</option>
-                    <option value="traders" disabled>Weight by Traders</option>
+                    <option value="payout">Weight by Payout</option>
+                    <option value="num_traders">Weight by Traders</option>
                   </select>
                 </div>
               </div>
@@ -74,8 +75,8 @@
                     <option value="none" selected>Default Size</option>
                     <option value="count">Scale by Number of Markets</option>
                     <option value="volume">Scale by Total Volume</option>
-                    <option value="payout" disabled>Scale by Total Payout</option>
-                    <option value="traders" disabled>Scale by Total Traders</option>
+                    <option value="payout">Scale by Total Payout</option>
+                    <option value="num_traders">Scale by Total Traders</option>
                   </select>
                 </div>
               </div>
@@ -106,31 +107,31 @@
                 <a class="button is-static">contains</a>
               </p>
               <div class="control">
-                <input class="input" type="text" name="group_text" id="group_text" disabled />
+                <input class="input" type="text" name="group_text" id="group_text" />
               </div>
             </div>
             <label class="label" for="description_length_val">Description Length</label>
             <div class="field has-addons">
               <p class="control">
                 <span class="select">
-                  <select id="description_length_mod" disabled>
+                  <select id="description_length_mod">
                     <option value="gt">≥</option>
                     <option value="lt">≤</option>
                   </select>
                 </span>
               </p>
               <div class="control">
-                <input class="input" type="number" name="description_length_val" id="description_length_val" disabled />
+                <input class="input" type="number" name="description_length_val" id="description_length_val" />
               </div>
             </div>
             <label class="label" for="is_predictive">Predictive Label</label>
             <div class="field">
               <div class="control is-expanded">
                 <div class="select is-fullwidth">
-                  <select name="is_predictive" id="is_predictive" disabled>
+                  <select name="is_predictive" id="is_predictive">
                     <option value="all" selected>All markets</option>
-                    <option value="predictive">Predictive only</option>
-                    <option value="nonpredictive">Non-predictive only</option>
+                    <option value="predictive">Exclude non-predictive</option>
+                    <option value="nonpredictive">Only non-predictive</option>
                   </select>
                 </div>
               </div>
@@ -175,45 +176,45 @@
             <div class="field has-addons">
               <p class="control">
                 <span class="select">
-                  <select id="payout_mod" disabled>
+                  <select id="payout_mod">
                     <option value="gt">≥</option>
                     <option value="lt">≤</option>
                   </select>
                 </span>
               </p>
               <div class="control">
-                <input class="input" type="number" name="payout_val" id="payout_val" disabled />
+                <input class="input" type="number" name="payout_val" id="payout_val" />
               </div>
               <p class="control">
                 <a class="button is-static">M$</a>
               </p>
             </div>
-            <label class="label" for="num_traders_val">Number of Traders</label>
+            <label class="label" for="num_trades_val">Number of Trades</label>
             <div class="field has-addons">
               <p class="control">
                 <span class="select">
-                  <select id="num_traders_mod" disabled>
+                  <select id="num_trades_mod">
                     <option value="gt">≥</option>
                     <option value="lt">≤</option>
                   </select>
                 </span>
               </p>
               <div class="control">
-                <input class="input" type="number" name="num_traders_val" id="num_traders_val" disabled />
+                <input class="input" type="number" name="num_trades_val" id="num_trades_val" />
               </div>
             </div>
-            <label class="label" for="num_comments_val">Number of Comments</label>
+            <label class="label" for="num_traders_val">Number of Unique Traders</label>
             <div class="field has-addons">
               <p class="control">
                 <span class="select">
-                  <select id="num_comments_mod" disabled>
+                  <select id="num_traders_mod">
                     <option value="gt">≥</option>
                     <option value="lt">≤</option>
                   </select>
                 </span>
               </p>
               <div class="control">
-                <input class="input" type="number" name="num_comments_val" id="num_comments_val" disabled />
+                <input class="input" type="number" name="num_traders_val" id="num_traders_val" />
               </div>
             </div>
           </div>
@@ -263,6 +264,20 @@
                 <a class="button is-static">days</a>
               </p>
             </div>
+            <label class="label" for="num_comments_val">Number of Comments</label>
+            <div class="field has-addons">
+              <p class="control">
+                <span class="select">
+                  <select id="num_comments_mod">
+                    <option value="gt">≥</option>
+                    <option value="lt">≤</option>
+                  </select>
+                </span>
+              </p>
+              <div class="control">
+                <input class="input" type="number" name="num_comments_val" id="num_comments_val" />
+              </div>
+            </div>
           </div>
           <div class="column is-2">
             <div class="field">
@@ -291,26 +306,30 @@
           'xbin_size',
           'ybin_modifier',
           'point_modifier',
-          'is_predictive',
           'creator_username',
           'question_text',
           'group_text',
+          'description_length_val',
+          'description_length_mod',
+          'is_predictive',
           'volume_val',
           'volume_mod',
           'liquidity_val',
           'liquidity_mod',
           'payout_val',
           'payout_mod',
+          'num_trades_val',
+          'num_trades_mod',
           'num_traders_val',
           'num_traders_mod',
-          'num_comments_val',
-          'num_comments_mod',
           'date_created_val',
           'date_created_mod',
           'date_closed_val',
           'date_closed_mod',
           'open_days_val',
           'open_days_mod',
+          'num_comments_val',
+          'num_comments_mod',
         ]
 
         const bodyParams = new URLSearchParams()

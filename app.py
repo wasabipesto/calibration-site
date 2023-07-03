@@ -28,6 +28,18 @@ class Market(BaseModel):
     date_resolved = pw.DateTimeField()
     prob_resolved = pw.DecimalField()
     prob_at_close = pw.DecimalField()
+    group_text = pw.CharField(null=True)
+    is_predictive = pw.BooleanField()
+    payout = pw.IntegerField()
+    description_length = pw.IntegerField()
+    num_trades = pw.IntegerField()
+    num_traders = pw.IntegerField()
+    num_comments = pw.IntegerField()
+    num_commenters = pw.IntegerField()
+    prob_at_q1 = pw.DecimalField()
+    prob_at_q2 = pw.DecimalField()
+    prob_at_q3 = pw.DecimalField()
+    prob_time_weighted = pw.DecimalField()
 
 app = Flask(__name__)
 scheduler = BackgroundScheduler()
@@ -39,19 +51,20 @@ if not Market.table_exists():
     db.create_tables([Market])
 
 def get_all_markets():
-    collection='markets'
     limit = 1000
     last = None
     data = []
     while True:
         if last:
             response = requests.get(
-                'https://manifold.markets/api/v0/'+collection+'?limit='+str(limit)
-                +'&before='+str(last)
+                'https://manifold.markets/api/v0/markets'+
+                '?limit='+str(limit)+
+                '&before='+str(last)
                 ).json()
         else:
             response = requests.get(
-                'https://manifold.markets/api/v0/'+collection+'?limit='+str(limit)
+                'https://manifold.markets/api/v0/markets'+
+                '?limit='+str(limit)
                 ).json()
         if len(response):   
             data += response
@@ -65,10 +78,41 @@ def get_full_market(market_id):
         'https://manifold.markets/api/v0/market/'+market_id
         ).json()
 
-def get_timestamp(market, attr):
+def get_market_comments(market_id):
+    return requests.get(
+        'https://manifold.markets/api/v0/comments'+
+            '?contractId='+market_id
+            ).json()
+
+def get_market_bets(market_id):
+    limit = 1000
+    last = None
+    data = []
+    while True:
+        if last:
+            response = requests.get(
+                'https://manifold.markets/api/v0/bets'+
+                '?contractId='+market_id+
+                '&limit='+str(limit)+
+                '&before='+str(last)
+                ).json()
+        else:
+            response = requests.get(
+                'https://manifold.markets/api/v0/bets'+
+                '?contractId='+market_id+
+                '&limit='+str(limit)
+                ).json()
+        if len(response):   
+            data += response
+            last = response[len(response)-1]['id']
+        if len(response) < limit:
+            break
+    return data
+
+def get_ts(item, attr):
     return datetime.utcfromtimestamp(
         min(int(
-            market.get(attr)
+            item.get(attr)
         )/1000,253401772800)
     )
 
@@ -89,8 +133,92 @@ def get_prob_resolved(market):
 def get_prob_at_close(market):
     return market['probability']
 
+def clean_bets(market, bets):
+    # add items for market creation and close
+    if len(bets):
+        bets_clean = [{
+            'timestamp': get_ts(market, 'createdTime'),
+            'prob_before': None,
+            'prob_after': bets[0]['probBefore'],
+        },{
+            'timestamp': get_ts(market, 'closeTime'),
+            'prob_before': bets[len(bets)-1]['probAfter'],
+            'prob_after': None,
+        }]
+        # copy in all bets
+        for bet in bets:
+            bets_clean.append({
+                'timestamp': get_ts(bet, 'createdTime'),
+                'prob_before': bet['probBefore'],
+                'prob_after': bet['probAfter'],
+            })
+        return sorted(bets_clean, key=lambda k: k['timestamp'])
+    else:
+        # megamind face: no bets?
+        # ^ this joke is over a year old and still funny
+        return [{
+            'timestamp': get_ts(market, 'createdTime'),
+            'prob_before': None,
+            'prob_after': market['probability'],
+        },{
+            'timestamp': get_ts(market, 'closeTime'),
+            'prob_before': market['probability'],
+            'prob_after': None,
+        }]
+
+def get_prob_at_pct(bets, percent):
+    timestamp = bets[0]['timestamp'] + (bets[len(bets)-1]['timestamp']-bets[0]['timestamp'])*percent
+    for bet in bets:
+        if bet['timestamp'] > timestamp:
+            return bet['prob_before']
+
+def get_prob_time_weighted(bets):
+    prob_weighted = 0
+    for bet in bets[1:]:
+        prob_weighted += bet['prob_before'] * (bet['timestamp']-bets[bets.index(bet)-1]['timestamp']).total_seconds()
+    return prob_weighted / (bets[len(bets)-1]['timestamp']-bets[0]['timestamp']).total_seconds()
+
 def get_open_days(market):
-    return (get_timestamp(market, 'closeTime')-get_timestamp(market, 'createdTime')).days
+    return (get_ts(market, 'closeTime')-get_ts(market, 'createdTime')).days
+
+def get_description_length(market):
+    return len(market['textDescription'])
+
+def get_group_text(market):
+    return str(market.get('groupSlugs'))
+
+def get_is_predictive(market):
+    if market.get('groupSlugs') and 'nonpredictive' in market.get('groupSlugs'):
+        return False
+    else:
+        return True
+
+def get_payout(market, bets):
+    positions = {
+        'YES': 0,
+        'NO': 0,
+    }
+    # collate positions
+    for bet in bets:
+        positions[bet['outcome']] += bet['shares']
+    # calculate payout
+    if market['resolution'] in positions.keys():
+        return positions[market['resolution']]
+    else:
+        return positions['YES'] * market['resolutionProbability'] + positions['NO'] * (1-market['resolutionProbability'])
+
+
+def get_num_trades(bets):
+    return len(bets)
+
+def get_num_traders(bets):
+    return len(set([i['userId'] for i in bets]))
+
+def get_num_comments(comments):
+    return len(comments)
+
+def get_num_commenters(comments):
+    return len(set([i['userId'] for i in comments]))
 
 def refresh_data():
     print('Starting cache refresh...')
@@ -99,7 +227,7 @@ def refresh_data():
     # download litemarkets
     markets_raw = get_all_markets()
     # download list of all saved IDs
-    cached_ids = [market['manifold_id'] for market in Market.select(Market.manifold_id).dicts().iterator()]
+    cached_ids = [market['manifold_id'] for market in Market.select(Market.manifold_id).dicts()]
     print('Updated cache in', (datetime.now()-ts0).seconds, 'seconds.')
     
     print('Starting data download...')
@@ -113,20 +241,36 @@ def refresh_data():
             market.get('outcomeType') == 'BINARY' and \
             not market.get('resolution') == 'CANCEL' and \
             not market['id'] in cached_ids:
-            #fmarket = get_full_market(market['id'])
+            # download all details
+            full_market = get_full_market(market['id'])
+            comments = get_market_comments(market['id'])
+            bets = get_market_bets(market['id'])
+            # save data
             newly_resolved_markets.append({
                 'manifold_id': market['id'],
                 'manifold_url': market['url'],
                 'question_text': market['question'],
                 'creator_username': market['creatorUsername'],
-                'date_created': get_timestamp(market, 'createdTime'),
-                'date_closed': get_timestamp(market, 'closeTime'),
+                'date_created': get_ts(market, 'createdTime'),
+                'date_closed': get_ts(market, 'closeTime'),
                 'open_days': get_open_days(market),
                 'volume': market['volume'],
                 'liquidity': market['totalLiquidity'],
-                'date_resolved': get_timestamp(market, 'resolutionTime'),
+                'date_resolved': get_ts(market, 'resolutionTime'),
                 'prob_resolved': get_prob_resolved(market),
                 'prob_at_close': get_prob_at_close(market),
+                'group_text': get_group_text(full_market),
+                'is_predictive': get_is_predictive(full_market),
+                'payout': get_payout(market, bets),
+                'description_length': get_description_length(full_market),
+                'num_trades': get_num_trades(bets),
+                'num_traders': get_num_traders(bets),
+                'num_comments': get_num_comments(comments),
+                'num_commenters': get_num_commenters(comments),
+                'prob_at_q1': get_prob_at_pct(clean_bets(market, bets), 0.25),
+                'prob_at_q2': get_prob_at_pct(clean_bets(market, bets), 0.50),
+                'prob_at_q3': get_prob_at_pct(clean_bets(market, bets), 0.75),
+                'prob_time_weighted': get_prob_time_weighted(clean_bets(market, bets)),
             })
     print('Downloaded all data in', (datetime.now()-ts0).seconds, 'seconds.')
 
@@ -156,7 +300,7 @@ def download_db():
 def index_manifold():
     return render_template('manifold.html')
 
-def filter_numeric_gtlt(markets, request, attr):
+def filter_gtlt(markets, request, attr):
     if request.form.get(attr+'_val') and request.form.get(attr+'_mod'):
         if request.form.get(attr+'_mod') == 'gt':
             markets = markets.where(getattr(Market, attr) >= request.form.get(attr+'_val'))
@@ -165,13 +309,21 @@ def filter_numeric_gtlt(markets, request, attr):
     #print(str(len(markets))+' markets remaining after '+attr+' filter.')
     return markets
 
-def filter_text_equals(markets, request, attr):
+def filter_predictive(markets, request, attr):
+    if request.form.get(attr) == 'predictive':
+        markets = markets.where(getattr(Market, attr) == True)
+    elif request.form.get(attr) == 'nonpredictive':
+        markets = markets.where(getattr(Market, attr) == False)
+    #print(str(len(markets))+' markets remaining after '+attr+' filter.')
+    return markets
+
+def filter_equals(markets, request, attr):
     if request.form.get(attr):
         markets = markets.where(getattr(Market, attr) == request.form.get(attr))
     #print(str(len(markets))+' markets remaining after '+attr+' filter.')
     return markets
 
-def filter_text_conatins(markets, request, attr):
+def filter_conatins(markets, request, attr):
     if request.form.get(attr):
         markets = markets.where(getattr(Market, attr).contains(request.form.get(attr)))
     #print(str(len(markets))+' markets remaining after '+attr+' filter.')
@@ -202,20 +354,23 @@ def get_data():
     markets = Market.select()
 
     # filter by each criterion
-    #markets = filter_bool(markets, request, 'is_predictive')
-    markets = filter_text_equals(markets, request, 'creator_username')
-    markets = filter_text_conatins(markets, request, 'question_text')
-    #markets = filter_text_conatins(markets, request, 'group_string')
-    markets = filter_numeric_gtlt(markets, request, 'volume')
-    markets = filter_numeric_gtlt(markets, request, 'liquidity')
-    #markets = filter_numeric_gtlt(markets, request, 'payout')
-    #markets = filter_numeric_gtlt(markets, request, 'num_traders')
-    #markets = filter_numeric_gtlt(markets, request, 'num_comments')
-    markets = filter_numeric_gtlt(markets, request, 'date_created')
-    markets = filter_numeric_gtlt(markets, request, 'date_closed')
-    markets = filter_numeric_gtlt(markets, request, 'open_days')
+    markets = filter_equals(markets, request, 'creator_username')
+    markets = filter_conatins(markets, request, 'question_text')
+    markets = filter_conatins(markets, request, 'group_text')
+    markets = filter_gtlt(markets, request, 'description_length')
+    markets = filter_predictive(markets, request, 'is_predictive')
+    markets = filter_gtlt(markets, request, 'volume')
+    markets = filter_gtlt(markets, request, 'liquidity')
+    markets = filter_gtlt(markets, request, 'payout')
+    markets = filter_gtlt(markets, request, 'num_trades')
+    markets = filter_gtlt(markets, request, 'num_traders')
+    markets = filter_gtlt(markets, request, 'date_created')
+    markets = filter_gtlt(markets, request, 'date_closed')
+    markets = filter_gtlt(markets, request, 'open_days')
+    markets = filter_gtlt(markets, request, 'num_comments')
 
-    if len(markets) == 0:
+    num_markets_total = len(markets)
+    if num_markets_total == 0:
         return jsonify({
             'status': 'error',
             'error_description': 'No markets in sample!',
@@ -226,12 +381,18 @@ def get_data():
         'prob_at_close': {
             'xlabel': 'Probability at Close',
         },
-        #'prob_at_midpoint': {
-        #    'xlabel': 'Probability at Midpoint',
-        #},
-        #'prob_time_weighted': {
-        #    'xlabel': 'Time-Weighted Probability',
-        #},
+        'prob_at_q1': {
+            'xlabel': 'Probability at 25%',
+        },
+        'prob_at_q2': {
+            'xlabel': 'Probability at Midpoint',
+        },
+        'prob_at_q3': {
+            'xlabel': 'Probability at 75%',
+        },
+        'prob_time_weighted': {
+            'xlabel': 'Time-Weighted Probability',
+        },
     }
     if request.form.get('xbin_modifier') in xbin_data.keys():
         xaxis_attr = request.form.get('xbin_modifier')
@@ -246,25 +407,41 @@ def get_data():
         'volume': {
             'ylabel': 'Resolution Value, Weighted by Volume',
         },
-        #'payout': {
-        #    'ylabel': 'Resolution Value, Weighted by Payout',
-        #},
-        #'traders': {
-        #    'ylabel': 'Resolution Value, Weighted by Traders',
-        #},
+        'payout': {
+            'ylabel': 'Resolution Value, Weighted by Payout',
+        },
+        'num_traders': {
+            'ylabel': 'Resolution Value, Weighted by Traders',
+        },
     }
     if request.form.get('ybin_modifier') in ybin_data.keys():
         yaxis_attr = request.form.get('ybin_modifier')
     else:
         yaxis_attr = 'none'
 
-    if request.form.get('point_modifier') in [
-        'none', 
-        'count', 
-        'volume', 
-        #'payout', 
-        #'traders'
-    ]:
+    point_data = {
+        'none': {
+            'prefix': '',
+            'postfix': '',
+        },
+        'count': {
+            'prefix': '',
+            'postfix': ' markets',
+        },
+        'volume': {
+            'prefix': 'M$',
+            'postfix': ' volume',
+        },
+        'payout': {
+            'prefix': 'M$',
+            'postfix': ' payout',
+        },
+        'num_traders': {
+            'prefix': '',
+            'postfix': ' traders',
+        },
+    }
+    if request.form.get('point_modifier') in point_data.keys():
         point_attr = request.form.get('point_modifier')
     else:
         point_attr = 'none'
@@ -275,7 +452,7 @@ def get_data():
         round(float(request.form.get('xbin_size')),3) in [round(i,3) for i in np.arange(0.005, 1, 0.005)]:
         xbin_size = round(float(request.form.get('xbin_size')),3)
     else:
-        xbin_size = 0.01
+        xbin_size = np.clip(np.ceil(20 / num_markets_total / 0.005) * 0.005, 0.01, 0.1)
     xb = xbin_size/2
     while xb < 1:
         xbins.update({round(xb,4):{'forecast':[],'resolved':[],'yaxis_weight':[],'point_weight':[]}})
@@ -296,7 +473,7 @@ def get_data():
         if point_attr in ['none', 'count']:
             xbins[xb]['point_weight'].append(1)
         else:
-            xbins[xb]['point_weight'].append(yaxis_weight)
+            xbins[xb]['point_weight'].append(market[point_attr])
 
     # assemble data to return
     data = {
@@ -308,7 +485,7 @@ def get_data():
         'ylabel': ybin_data[yaxis_attr]['ylabel'],
         'point_size': [],
         'point_desc': [],
-        'num_markets_total': 0,
+        'num_markets_total': num_markets_total,
         'brier_score': 0,
     }
 
@@ -337,9 +514,8 @@ def get_data():
             else:
                 sum_attr = sum([xb['point_weight'][i] for i in range(len(xb['resolved']))])
                 data['point_size'].append(sum_attr)
-                data['point_desc'].append('M$'+str(sum_attr)+' '+point_attr)
-            # save other misc data
-            data['num_markets_total'] += len(xb['resolved'])
+                data['point_desc'].append(point_data[point_attr]['prefix']+str(sum_attr)+point_data[point_attr]['postfix'])
+            
     
     # save final brier score
     data['brier_score'] = round(brier_cumsum / brier_weight, 4)
@@ -353,7 +529,7 @@ if __name__ == "__main__":
     print('App started.')
     scheduler.add_job(
         refresh_data, 'interval', minutes=60, 
-        start_date=(datetime.now()+timedelta(seconds=30))
+        start_date=(datetime.now()+timedelta(seconds=10))
         )
     scheduler.start()
     serve(app, listen='*:80')
