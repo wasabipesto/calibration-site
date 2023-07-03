@@ -14,284 +14,311 @@
   </head>
   <body>
     <div class="container">
-      <div id="graph"></div>
-      <br />
-      <form id="options_form">
-        <div class="columns">
-          <div class="column">
-            <label class="label" for="xbin_modifier">X-Axis Bin Method</label>
-            <div class="field">
-              <div class="control is-expanded">
-                <div class="select is-fullwidth">
-                  <select name="xbin_modifier" id="xbin_modifier">
-                    <option value="prob_time_weighted">Time-Weighted Probability</option>
-                    <option value="prob_at_q1">Probability at 25%</option>
-                    <option value="prob_at_q2">Probability at Midpoint</option>
-                    <option value="prob_at_q3">Probability at 75%</option>
-                    <option value="prob_at_close">Probability at Close</option>
-                  </select>
-                </div>
-              </div>
+      <section class="hero is-link is-small">
+        <div class="hero-body">
+          <div class="columns is-vcentered">
+            <div class="column">
+              <p class="title">Calibration City</p>
             </div>
-            <label class="label" for="xbin_size">X-Axis Bin Size</label>
-            <div class="field">
-              <div class="control is-expanded">
-                <div class="select is-fullwidth">
-                  <select name="xbin_size" id="xbin_size">
-                    <option value="0" selected>Default Size</option>
-                    <option value="0.005">0.5%</option>
-                    <option value="0.010">1.0%</option>
-                    <option value="0.015">1.5%</option>
-                    <option value="0.020">2.0%</option>
-                    <option value="0.025">2.5%</option>
-                    <option value="0.030">3.0%</option>
-                    <option value="0.040">4.0%</option>
-                    <option value="0.050">5.0%</option>
-                    <option value="0.075">7.5%</option>
-                    <option value="0.100">10%</option>
-                    <option value="0.150">15%</option>
-                  </select>
-                </div>
-              </div>
+            <div class="column">
+              <nav class="breadcrumb is-right">
+                <ul>
+                  <li><a href="/">Home</a></li>
+                  <li><a href="/">About</a></li>
+                  <li class="is-active"><a href="/manifold">Manifold</a></li>
+                </ul>
+              </nav>
             </div>
-            <label class="label" for="ybin_modifier">Y-Axis Weight</label>
-            <div class="field">
-              <div class="control is-expanded">
-                <div class="select is-fullwidth">
-                  <select name="ybin_modifier" id="ybin_modifier">
-                    <option value="none" selected>No Weight</option>
-                    <option value="volume">Weight by Volume</option>
-                    <option value="payout">Weight by Payout</option>
-                    <option value="num_traders">Weight by Traders</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-            <label class="label" for="point_modifier">Datapoint Scale</label>
-            <div class="field">
-              <div class="control is-expanded">
-                <div class="select is-fullwidth">
-                  <select name="point_modifier" id="point_modifier">
-                    <option value="none" selected>Default Size</option>
-                    <option value="count">Scale by Number of Markets</option>
-                    <option value="volume">Scale by Total Volume</option>
-                    <option value="payout">Scale by Total Payout</option>
-                    <option value="num_traders">Scale by Total Traders</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="column">
-            <label class="label" for="creator_username">Creator Username</label>
-            <div class="field has-addons">
-              <p class="control">
-                <a class="button is-static">equals</a>
-              </p>
-              <div class="control">
-                <input class="input" type="text" name="creator_username" id="creator_username" />
-              </div>
-            </div>
-            <label class="label" for="question_text">Question Text</label>
-            <div class="field has-addons">
-              <p class="control">
-                <a class="button is-static">contains</a>
-              </p>
-              <div class="control">
-                <input class="input" type="text" name="question_text" id="question_text" />
-              </div>
-            </div>
-            <label class="label" for="group_text">Group</label>
-            <div class="field has-addons">
-              <p class="control">
-                <a class="button is-static">contains</a>
-              </p>
-              <div class="control">
-                <input class="input" type="text" name="group_text" id="group_text" />
-              </div>
-            </div>
-            <label class="label" for="description_length_val">Description Length</label>
-            <div class="field has-addons">
-              <p class="control">
-                <span class="select">
-                  <select id="description_length_mod">
-                    <option value="gt">≥</option>
-                    <option value="lt">≤</option>
-                  </select>
-                </span>
-              </p>
-              <div class="control">
-                <input class="input" type="number" name="description_length_val" id="description_length_val" />
-              </div>
-            </div>
-            <label class="label" for="is_predictive">Predictive Label</label>
-            <div class="field">
-              <div class="control is-expanded">
-                <div class="select is-fullwidth">
-                  <select name="is_predictive" id="is_predictive">
-                    <option value="all" selected>All markets</option>
-                    <option value="predictive">Exclude non-predictive</option>
-                    <option value="nonpredictive">Only non-predictive</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="column">
-            <label class="label" for="volume_val">Market Volume</label>
-            <div class="field has-addons">
-              <p class="control">
-                <span class="select">
-                  <select id="volume_mod">
-                    <option value="gt">≥</option>
-                    <option value="lt">≤</option>
-                  </select>
-                </span>
-              </p>
-              <div class="control">
-                <input class="input" type="number" name="volume_val" id="volume_val" />
-              </div>
-              <p class="control">
-                <a class="button is-static">M$</a>
-              </p>
-            </div>
-            <label class="label" for="liquidity_val">Market Liquidity</label>
-            <div class="field has-addons">
-              <p class="control">
-                <span class="select">
-                  <select id="liquidity_mod">
-                    <option value="gt">≥</option>
-                    <option value="lt">≤</option>
-                  </select>
-                </span>
-              </p>
-              <div class="control">
-                <input class="input" type="number" name="liquidity_val" id="liquidity_val" />
-              </div>
-              <p class="control">
-                <a class="button is-static">M$</a>
-              </p>
-            </div>
-            <label class="label" for="payout_val">Market Payout</label>
-            <div class="field has-addons">
-              <p class="control">
-                <span class="select">
-                  <select id="payout_mod">
-                    <option value="gt">≥</option>
-                    <option value="lt">≤</option>
-                  </select>
-                </span>
-              </p>
-              <div class="control">
-                <input class="input" type="number" name="payout_val" id="payout_val" />
-              </div>
-              <p class="control">
-                <a class="button is-static">M$</a>
-              </p>
-            </div>
-            <label class="label" for="num_trades_val">Number of Trades</label>
-            <div class="field has-addons">
-              <p class="control">
-                <span class="select">
-                  <select id="num_trades_mod">
-                    <option value="gt">≥</option>
-                    <option value="lt">≤</option>
-                  </select>
-                </span>
-              </p>
-              <div class="control">
-                <input class="input" type="number" name="num_trades_val" id="num_trades_val" />
-              </div>
-            </div>
-            <label class="label" for="num_traders_val">Number of Unique Traders</label>
-            <div class="field has-addons">
-              <p class="control">
-                <span class="select">
-                  <select id="num_traders_mod">
-                    <option value="gt">≥</option>
-                    <option value="lt">≤</option>
-                  </select>
-                </span>
-              </p>
-              <div class="control">
-                <input class="input" type="number" name="num_traders_val" id="num_traders_val" />
-              </div>
-            </div>
-          </div>
-          <div class="column">
-            <label class="label" for="date_created_val">Date Created</label>
-            <div class="field has-addons">
-              <p class="control">
-                <span class="select">
-                  <select id="date_created_mod">
-                    <option value="lt">Before</option>
-                    <option value="gt">After</option>
-                  </select>
-                </span>
-              </p>
-              <p class="control is-expanded">
-                <input class="input" type="date" name="date_created_val" id="date_created_val" />
-              </p>
-            </div>
-            <label class="label" for="date_closed_val">Date Closed</label>
-            <div class="field has-addons">
-              <p class="control">
-                <span class="select">
-                  <select id="date_closed_mod">
-                    <option value="lt">Before</option>
-                    <option value="gt">After</option>
-                  </select>
-                </span>
-              </p>
-              <p class="control is-expanded">
-                <input class="input" type="date" name="date_closed_val" id="date_closed_val" />
-              </p>
-            </div>
-            <label class="label" for="open_days_val">Open Length</label>
-            <div class="field has-addons">
-              <p class="control">
-                <span class="select">
-                  <select id="open_days_mod">
-                    <option value="gt">≥</option>
-                    <option value="lt">≤</option>
-                  </select>
-                </span>
-              </p>
-              <div class="control">
-                <input class="input" type="number" name="open_days_val" id="open_days_val" />
-              </div>
-              <p class="control">
-                <a class="button is-static">days</a>
-              </p>
-            </div>
-            <label class="label" for="num_comments_val">Number of Comments</label>
-            <div class="field has-addons">
-              <p class="control">
-                <span class="select">
-                  <select id="num_comments_mod">
-                    <option value="gt">≥</option>
-                    <option value="lt">≤</option>
-                  </select>
-                </span>
-              </p>
-              <div class="control">
-                <input class="input" type="number" name="num_comments_val" id="num_comments_val" />
-              </div>
-            </div>
-          </div>
-          <div class="column is-2">
-            <div class="field">
-              <div class="control is-grouped-centered">
-                <button class="button is-link" type="submit">Apply</button>
-                <button class="button is-light" type="reset">Reset</button>
-              </div>
-            </div>
-            <div id="status_reponse"></div>
           </div>
         </div>
-      </form>
+      </section>
+      <section class="section">
+        <article class="message is-danger is-hidden-tablet-only is-hidden-desktop-only is-hidden-widescreen-only">
+          <div class="message-body">Warning: This site is not optimized for mobile viewing.</div>
+        </article>
+        <div class="box">
+          <div id="graph"></div>
+        </div>
+      </section>
+      <section class="section">
+        <form id="options_form">
+          <div class="columns is-centered is-multiline">
+            <div class="column is-6-tablet is-4-desktop is-3-widescreen">
+              <label class="label" for="xbin_modifier">X-Axis Bin Method</label>
+              <div class="field">
+                <div class="control is-expanded">
+                  <div class="select is-fullwidth">
+                    <select name="xbin_modifier" id="xbin_modifier">
+                      <option value="prob_time_weighted">Time-Weighted Probability</option>
+                      <option value="prob_at_q1">Probability at 25%</option>
+                      <option value="prob_at_q2">Probability at Midpoint</option>
+                      <option value="prob_at_q3">Probability at 75%</option>
+                      <option value="prob_at_close">Probability at Close</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <label class="label" for="xbin_size">X-Axis Bin Size</label>
+              <div class="field">
+                <div class="control is-expanded">
+                  <div class="select is-fullwidth">
+                    <select name="xbin_size" id="xbin_size">
+                      <option value="0" selected>Default Size</option>
+                      <option value="0.005">0.5%</option>
+                      <option value="0.010">1.0%</option>
+                      <option value="0.015">1.5%</option>
+                      <option value="0.020">2.0%</option>
+                      <option value="0.025">2.5%</option>
+                      <option value="0.030">3.0%</option>
+                      <option value="0.040">4.0%</option>
+                      <option value="0.050">5.0%</option>
+                      <option value="0.075">7.5%</option>
+                      <option value="0.100">10%</option>
+                      <option value="0.150">15%</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <label class="label" for="ybin_modifier">Y-Axis Weight</label>
+              <div class="field">
+                <div class="control is-expanded">
+                  <div class="select is-fullwidth">
+                    <select name="ybin_modifier" id="ybin_modifier">
+                      <option value="none" selected>No Weight</option>
+                      <option value="volume">Weight by Volume</option>
+                      <option value="payout">Weight by Payout</option>
+                      <option value="num_traders">Weight by Traders</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <label class="label" for="point_modifier">Datapoint Scale</label>
+              <div class="field">
+                <div class="control is-expanded">
+                  <div class="select is-fullwidth">
+                    <select name="point_modifier" id="point_modifier">
+                      <option value="none" selected>Default Size</option>
+                      <option value="count">Scale by Number of Markets</option>
+                      <option value="volume">Scale by Total Volume</option>
+                      <option value="payout">Scale by Total Payout</option>
+                      <option value="num_traders">Scale by Total Traders</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="column is-6-tablet is-4-desktop is-3-widescreen">
+              <label class="label" for="creator_username">Creator Username</label>
+              <div class="field has-addons">
+                <p class="control">
+                  <a class="button is-static">equals</a>
+                </p>
+                <div class="control is-expanded">
+                  <input class="input" type="text" name="creator_username" id="creator_username" />
+                </div>
+              </div>
+              <label class="label" for="question_text">Question Text</label>
+              <div class="field has-addons">
+                <p class="control">
+                  <a class="button is-static">contains</a>
+                </p>
+                <div class="control is-expanded">
+                  <input class="input" type="text" name="question_text" id="question_text" />
+                </div>
+              </div>
+              <label class="label" for="group_text">Group</label>
+              <div class="field has-addons">
+                <p class="control">
+                  <a class="button is-static">contains</a>
+                </p>
+                <div class="control is-expanded">
+                  <input class="input" type="text" name="group_text" id="group_text" />
+                </div>
+              </div>
+              <label class="label" for="description_length_val">Description Length</label>
+              <div class="field has-addons">
+                <p class="control">
+                  <span class="select">
+                    <select id="description_length_mod">
+                      <option value="gt">≥</option>
+                      <option value="lt">≤</option>
+                    </select>
+                  </span>
+                </p>
+                <div class="control is-expanded">
+                  <input class="input" type="number" name="description_length_val" id="description_length_val" />
+                </div>
+              </div>
+              <label class="label" for="is_predictive">Predictive Label</label>
+              <div class="field">
+                <div class="control is-expanded">
+                  <div class="select is-fullwidth">
+                    <select name="is_predictive" id="is_predictive">
+                      <option value="all" selected>All markets</option>
+                      <option value="predictive">Exclude non-predictive</option>
+                      <option value="nonpredictive">Only non-predictive</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="column is-6-tablet is-4-desktop is-3-widescreen">
+              <label class="label" for="volume_val">Market Volume</label>
+              <div class="field has-addons">
+                <p class="control">
+                  <span class="select">
+                    <select id="volume_mod">
+                      <option value="gt">≥</option>
+                      <option value="lt">≤</option>
+                    </select>
+                  </span>
+                </p>
+                <div class="control is-expanded">
+                  <input class="input" type="number" name="volume_val" id="volume_val" />
+                </div>
+                <p class="control">
+                  <a class="button is-static">M$</a>
+                </p>
+              </div>
+              <label class="label" for="liquidity_val">Market Liquidity</label>
+              <div class="field has-addons">
+                <p class="control">
+                  <span class="select">
+                    <select id="liquidity_mod">
+                      <option value="gt">≥</option>
+                      <option value="lt">≤</option>
+                    </select>
+                  </span>
+                </p>
+                <div class="control is-expanded">
+                  <input class="input" type="number" name="liquidity_val" id="liquidity_val" />
+                </div>
+                <p class="control">
+                  <a class="button is-static">M$</a>
+                </p>
+              </div>
+              <label class="label" for="payout_val">Market Payout</label>
+              <div class="field has-addons">
+                <p class="control">
+                  <span class="select">
+                    <select id="payout_mod">
+                      <option value="gt">≥</option>
+                      <option value="lt">≤</option>
+                    </select>
+                  </span>
+                </p>
+                <div class="control is-expanded">
+                  <input class="input" type="number" name="payout_val" id="payout_val" />
+                </div>
+                <p class="control">
+                  <a class="button is-static">M$</a>
+                </p>
+              </div>
+              <label class="label" for="num_trades_val">Number of Trades</label>
+              <div class="field has-addons">
+                <p class="control">
+                  <span class="select">
+                    <select id="num_trades_mod">
+                      <option value="gt">≥</option>
+                      <option value="lt">≤</option>
+                    </select>
+                  </span>
+                </p>
+                <div class="control is-expanded">
+                  <input class="input" type="number" name="num_trades_val" id="num_trades_val" />
+                </div>
+              </div>
+              <label class="label" for="num_traders_val">Number of Unique Traders</label>
+              <div class="field has-addons">
+                <p class="control">
+                  <span class="select">
+                    <select id="num_traders_mod">
+                      <option value="gt">≥</option>
+                      <option value="lt">≤</option>
+                    </select>
+                  </span>
+                </p>
+                <div class="control is-expanded">
+                  <input class="input" type="number" name="num_traders_val" id="num_traders_val" />
+                </div>
+              </div>
+            </div>
+            <div class="column is-6-tablet is-4-desktop is-3-widescreen">
+              <label class="label" for="date_created_val">Date Created</label>
+              <div class="field has-addons">
+                <p class="control">
+                  <span class="select">
+                    <select id="date_created_mod">
+                      <option value="lt">Before</option>
+                      <option value="gt">After</option>
+                    </select>
+                  </span>
+                </p>
+                <p class="control is-expanded">
+                  <input class="input" type="date" name="date_created_val" id="date_created_val" />
+                </p>
+              </div>
+              <label class="label" for="date_closed_val">Date Closed</label>
+              <div class="field has-addons">
+                <p class="control">
+                  <span class="select">
+                    <select id="date_closed_mod">
+                      <option value="lt">Before</option>
+                      <option value="gt">After</option>
+                    </select>
+                  </span>
+                </p>
+                <p class="control is-expanded">
+                  <input class="input" type="date" name="date_closed_val" id="date_closed_val" />
+                </p>
+              </div>
+              <label class="label" for="open_days_val">Open Length</label>
+              <div class="field has-addons">
+                <p class="control">
+                  <span class="select">
+                    <select id="open_days_mod">
+                      <option value="gt">≥</option>
+                      <option value="lt">≤</option>
+                    </select>
+                  </span>
+                </p>
+                <div class="control is-expanded">
+                  <input class="input" type="number" name="open_days_val" id="open_days_val" />
+                </div>
+                <p class="control">
+                  <a class="button is-static">days</a>
+                </p>
+              </div>
+              <label class="label" for="num_comments_val">Number of Comments</label>
+              <div class="field has-addons">
+                <p class="control">
+                  <span class="select">
+                    <select id="num_comments_mod">
+                      <option value="gt">≥</option>
+                      <option value="lt">≤</option>
+                    </select>
+                  </span>
+                </p>
+                <div class="control is-expanded">
+                  <input class="input" type="number" name="num_comments_val" id="num_comments_val" />
+                </div>
+              </div>
+            </div>
+            <div class="column is-6-tablet is-4-desktop is-3-widescreen">
+              <div class="box field">
+                <div class="control pb-5 has-text-centered">
+                  <button class="button is-link" type="submit">Apply</button>
+                  <button class="button is-light" type="reset">Reset</button>
+                </div>
+                <article class="message is-link">
+                  <div class="message-body" id="status_reponse">Loading...</div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </form>
+      </section>
     </div>
-    <br />
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script>
       document.getElementById('options_form').addEventListener('submit', function (event) {
@@ -398,7 +425,7 @@
             type: 'scatter',
             mode: 'markers',
             marker: {
-              color: 'rgb(227, 119, 194)',
+              color: 'rgb(72, 95, 199)',
               size: data.point_size,
             },
           },
@@ -426,8 +453,6 @@
             range: [0, 1],
             tickformat: ',.0%',
           },
-          //height: 500,
-          //margin: { l: 60, r: 40, t: 60, b: 40 },
           showlegend: false,
         }
         const config = { responsive: true }

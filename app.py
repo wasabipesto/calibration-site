@@ -397,7 +397,7 @@ def get_data():
     if request.form.get('xbin_modifier') in xbin_data.keys():
         xaxis_attr = request.form.get('xbin_modifier')
     else:
-        xaxis_attr = 'prob_at_close'
+        xaxis_attr = 'prob_time_weighted'
 
     # set y-axis weight
     ybin_data = {
@@ -452,6 +452,7 @@ def get_data():
         round(float(request.form.get('xbin_size')),3) in [round(i,3) for i in np.arange(0.005, 1, 0.005)]:
         xbin_size = round(float(request.form.get('xbin_size')),3)
     else:
+        # default to about 20 markets per bin
         xbin_size = np.clip(np.ceil(20 / num_markets_total / 0.005) * 0.005, 0.01, 0.1)
     xb = xbin_size/2
     while xb < 1:

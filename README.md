@@ -43,3 +43,27 @@
 | Description/help text | ⏳ Not Implemented |
 | Link to download db | ✅ Implemented |
 | Dynamically size datapoints | ✅ Implemented |
+
+## Running
+
+The server runs entirely in Python with minimal dependencies. You can run it like so:
+
+```
+git clone git@github.com:wasabipesto/calibration-site.git
+cd calibration-site
+pip install -r requirements.txt
+python app.py
+```
+
+For convenience, I run it in Docker:
+
+```
+docker build -t calibration-site .
+docker run -d \
+    -p 9632:80 \
+    -v /opt/calibration-site/data:/usr/src/data \
+    -u 1001 \
+    --restart unless-stopped \
+    --name calibration-site \
+    calibration-site
+```
