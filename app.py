@@ -220,6 +220,10 @@ def get_num_comments(comments):
 def get_num_commenters(comments):
     return len(set([i['userId'] for i in comments]))
 
+def save_market(market):
+    print('Saving market', market['manifold_id'])
+    Market.insert(market).execute()
+
 def refresh_data():
     print('Starting cache refresh...')
     # start timer
@@ -231,7 +235,6 @@ def refresh_data():
     print('Updated cache in', (datetime.now()-ts0).seconds, 'seconds.')
     
     print('Starting data download...')
-    newly_resolved_markets = []
     for market in markets_raw:
         if not markets_raw.index(market) % 5000:
             # show progress
@@ -246,7 +249,7 @@ def refresh_data():
             comments = get_market_comments(market['id'])
             bets = get_market_bets(market['id'])
             # save data
-            newly_resolved_markets.append({
+            save_market({
                 'manifold_id': market['id'],
                 'manifold_url': market['url'],
                 'question_text': market['question'],
@@ -273,19 +276,6 @@ def refresh_data():
                 'prob_time_weighted': get_prob_time_weighted(clean_bets(market, bets)),
             })
     print('Downloaded all data in', (datetime.now()-ts0).seconds, 'seconds.')
-
-    if len(newly_resolved_markets):
-        # save everything to the db
-        print('Saving', len(newly_resolved_markets), 'newly resolved markets...')
-        insert_batch_size = 100
-        with db.atomic():
-            for idx in range(0, len(newly_resolved_markets), insert_batch_size):
-                Market.insert_many(
-                    newly_resolved_markets[idx:idx+insert_batch_size]
-                    ).execute()
-        print('Complete.')
-    else:
-        print('No changes to be made.')
 
 
 @app.route('/')
