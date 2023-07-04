@@ -136,12 +136,18 @@ def get_prob_at_close(market):
 def clean_bets(market, bets):
     # add items for market creation and close
     if len(bets):
+        # market closeTime is user-set and can be before actual end
+        close_time = max(
+            get_ts(market, 'closeTime'),
+            get_ts(market, 'createdTime')+timedelta(seconds=1),
+            get_ts(bets[len(bets)-1], 'createdTime')+timedelta(seconds=1),
+            )
         bets_clean = [{
             'timestamp': get_ts(market, 'createdTime'),
             'prob_before': None,
             'prob_after': bets[0]['probBefore'],
         },{
-            'timestamp': get_ts(market, 'closeTime'),
+            'timestamp': close_time,
             'prob_before': bets[len(bets)-1]['probAfter'],
             'prob_after': None,
         }]
@@ -156,12 +162,16 @@ def clean_bets(market, bets):
     else:
         # megamind face: no bets?
         # ^ this joke is over a year old and still funny
+        close_time = max(
+            get_ts(market, 'closeTime'),
+            get_ts(market, 'createdTime')+timedelta(seconds=1),
+            )
         return [{
             'timestamp': get_ts(market, 'createdTime'),
             'prob_before': None,
             'prob_after': market['probability'],
         },{
-            'timestamp': get_ts(market, 'closeTime'),
+            'timestamp': close_time,
             'prob_before': market['probability'],
             'prob_after': None,
         }]
