@@ -143,10 +143,12 @@ def clean_bets(market, bets):
             get_ts(bets[len(bets)-1], 'createdTime')+timedelta(seconds=1),
             )
         bets_clean = [{
+            'id': 'market_created',
             'timestamp': get_ts(market, 'createdTime'),
             'prob_before': None,
             'prob_after': bets[0]['probBefore'],
         },{
+            'id': 'market_closed',
             'timestamp': close_time,
             'prob_before': bets[len(bets)-1]['probAfter'],
             'prob_after': None,
@@ -154,6 +156,7 @@ def clean_bets(market, bets):
         # copy in all bets
         for bet in bets:
             bets_clean.append({
+                'id': bet['id'],
                 'timestamp': get_ts(bet, 'createdTime'),
                 'prob_before': bet['probBefore'],
                 'prob_after': bet['probAfter'],
@@ -167,10 +170,12 @@ def clean_bets(market, bets):
             get_ts(market, 'createdTime')+timedelta(seconds=1),
             )
         return [{
+            'id': 'market_created',
             'timestamp': get_ts(market, 'createdTime'),
             'prob_before': None,
             'prob_after': market['probability'],
         },{
+            'id': 'market_closed',
             'timestamp': close_time,
             'prob_before': market['probability'],
             'prob_after': None,
@@ -462,6 +467,9 @@ def get_data():
     for market in markets.dicts().iterator():
         # calculate appropriate xaxis bins
         xb = round(int((float(market[xaxis_attr]) - xbin_size/2) / xbin_size) * xbin_size + xbin_size/2, 4)
+        if not xb in xbins.keys():
+            print('Error: Count not fit market', market['manifold_id'], xaxis_attr, market[xaxis_attr], '->', xb, 'to xbins', list(xbins.keys()))
+            continue
         # calculate appropriate yaxis weight
         if yaxis_attr == 'none':
             yaxis_weight = 1
