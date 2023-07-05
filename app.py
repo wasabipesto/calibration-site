@@ -79,10 +79,15 @@ def get_full_market(market_id):
         ).json()
 
 def get_market_comments(market_id):
-    return requests.get(
-        'https://manifold.markets/api/v0/comments'+
-            '?contractId='+market_id
-            ).json()
+    try:
+        return requests.get(
+            'https://manifold.markets/api/v0/comments'+
+                '?contractId='+market_id
+                ).json()
+    except requests.exceptions.JSONDecodeError:
+        # for markets like yCZog61lRFbJZnz8UW76
+        # fix when /comments gets paginated
+        return []
 
 def get_market_bets(market_id):
     limit = 1000
