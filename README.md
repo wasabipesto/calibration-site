@@ -32,6 +32,7 @@
 | Weight markets by volume | ✅ Implemented |
 | Weight markets by payout (value) | ✅ Implemented |
 | Weight markets by number of traders | ✅ Implemented |
+| Weight markets by market length | ⏳ Not Implemented |
 | Weight markets by number of comments | ⛔ Not Planned |
 | **Other** |
 | Adjustable x-bin size | ✅ Implemented |
@@ -39,8 +40,10 @@
 | Show total number of markets in sample | ✅ Implemented |
 | Show Brier score | ✅ Implemented |
 | Create multiple plots | ⛔ Not Planned |
-| Show table of markets | ⛔ Not Planned |
-| Description/help text | ⏳ Not Implemented |
+| Show table of all selected markets | ⛔ Not Planned |
+| Show list of markets in particular bin | ⛔ Not Planned |
+| Literally any documentation | ⏳ Not Implemented |
+| Tooltips on methods/weights | ⏳ Not Implemented |
 | Link to download db | ✅ Implemented |
 | Dynamically size datapoints | ✅ Implemented |
 
