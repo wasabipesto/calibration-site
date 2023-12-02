@@ -506,7 +506,7 @@ def get_data():
     if request.form.get("ybin_modifier") in ybin_data.keys():
         yaxis_attr = request.form.get("ybin_modifier")
     else:
-        yaxis_attr = "none"
+        yaxis_attr = "num_traders"
 
     point_data = {
         "none": {
@@ -533,7 +533,7 @@ def get_data():
     if request.form.get("point_modifier") in point_data.keys():
         point_attr = request.form.get("point_modifier")
     else:
-        point_attr = "none"
+        point_attr = "num_traders"
 
     # generate x-axis bins
     xbins = {}
