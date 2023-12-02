@@ -543,7 +543,7 @@ def get_data():
         xbin_size = round(float(request.form.get("xbin_size")), 3)
     else:
         # default to about 20 markets per bin
-        xbin_size = np.clip(np.ceil(20 / num_markets_total / 0.005) * 0.005, 0.01, 0.1)
+        xbin_size = np.clip(np.ceil(20 / num_markets_total / 0.005) * 0.005, 0.02, 0.1)
     xb = xbin_size / 2
     while xb < 1:
         xbins.update(
