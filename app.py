@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify, send_file
+from flask_cors import CORS
 from waitress import serve
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
@@ -45,6 +46,7 @@ class Market(BaseModel):
 
 
 app = Flask(__name__)
+CORS(app)
 scheduler = BackgroundScheduler()
 if not os.path.exists(db_path):
     print("Creating database file...")
