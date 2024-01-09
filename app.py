@@ -63,7 +63,7 @@ def get_all_markets():
     while True:
         if last:
             response = requests.get(
-                "https://manifold.markets/api/v0/markets"
+                "https://api.manifold.markets/v0/markets"
                 + "?limit="
                 + str(limit)
                 + "&before="
@@ -71,7 +71,7 @@ def get_all_markets():
             ).json()
         else:
             response = requests.get(
-                "https://manifold.markets/api/v0/markets" + "?limit=" + str(limit)
+                "https://api.manifold.markets/v0/markets" + "?limit=" + str(limit)
             ).json()
         if len(response):
             data += response
@@ -82,13 +82,13 @@ def get_all_markets():
 
 
 def get_full_market(market_id):
-    return requests.get("https://manifold.markets/api/v0/market/" + market_id).json()
+    return requests.get("https://api.manifold.markets/v0/market/" + market_id).json()
 
 
 def get_market_comments(market_id):
     try:
         return requests.get(
-            "https://manifold.markets/api/v0/comments" + "?contractId=" + market_id
+            "https://api.manifold.markets/v0/comments" + "?contractId=" + market_id
         ).json()
     except requests.exceptions.JSONDecodeError:
         # for markets like yCZog61lRFbJZnz8UW76
@@ -103,7 +103,7 @@ def get_market_bets(market_id):
     while True:
         if last:
             response = requests.get(
-                "https://manifold.markets/api/v0/bets"
+                "https://api.manifold.markets/v0/bets"
                 + "?contractId="
                 + market_id
                 + "&limit="
@@ -113,7 +113,7 @@ def get_market_bets(market_id):
             ).json()
         else:
             response = requests.get(
-                "https://manifold.markets/api/v0/bets"
+                "https://api.manifold.markets/v0/bets"
                 + "?contractId="
                 + market_id
                 + "&limit="
