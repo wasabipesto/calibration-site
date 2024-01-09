@@ -1,5 +1,7 @@
 # Calibration Stats
 
+Note! This site is being rewritten at this repository: https://github.com/wasabipesto/themis
+
 > A site to collect and display calibration stats for prediction markets.
 
 ## Manifold
